@@ -9,17 +9,24 @@ This directory contains read-only references to previous JARVIS versions.
 ## Setup Methods
 
 ### 1. Symbolic Links (Recommended)
-Link to existing local copies from :
+Link to existing local copies:
+
 ```powershell
-# From the root folder of the local repository
-pushd <repo-root>\
 # Windows (PowerShell Admin)
-New-Item -ItemType SymbolicLink -Path ".\references\JARVISv2_ref" -Target "C:\Path\ToCopied\JARVISv2"
-New-Item -ItemType SymbolicLink -Path ".\references\JARVISv3_ref" -Target "C:\Path\ToCopied\JARVISv3"
+# From <repo-root>\
+New-Item -ItemType SymbolicLink -Path ".\reference\JARVISv2_ref" -Target "C:\Path\To\JARVISv2"
+New-Item -ItemType SymbolicLink -Path ".\reference\JARVISv3_ref" -Target "C:\Path\To\JARVISv3"
+```
+
+```bash
+# Linux / macOS
+# From <repo-root>/
+ln -s /path/to/JARVISv2 ./reference/JARVISv2_ref
+ln -s /path/to/JARVISv3 ./reference/JARVISv3_ref
 ```
 
 ### 2. Direct Clone
-Clone directly into this folder (aka `pushd <repo-root>\references`):
+Clone directly into this folder (aka `cd <repo-root>/reference`):
 ```bash
 git clone 'https://github.com/bentman/JARVISv2.git'
 git clone 'https://github.com/bentman/JARVISv3.git'
