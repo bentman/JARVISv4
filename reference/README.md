@@ -17,7 +17,7 @@ New-Item -ItemType SymbolicLink -Path ".\references\JARVISv3_ref" -Target "C:\Pa
 ```
 
 ### 2. Direct Clone
-Clone directly into this folder (aka `pushd <repo-root>`):
+Clone directly into this folder (aka `pushd <repo-root>\references`):
 ```bash
 git clone 'https://github.com/bentman/JARVISv2.git'
 git clone 'https://github.com/bentman/JARVISv3.git'
