@@ -1,0 +1,131 @@
+# =============================================================================
+# JARVISv4 .gitignore
+# Compiled from v2/v3 references and v4 ECF specifications
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. GLOBAL & OS
+# -----------------------------------------------------------------------------
+# OS Metadata
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursorignore
+.clinerules/
+
+# Selective Ignore Rules
+reference/1st_draft
+reference/conceptual
+reference/JARVISv2_ref/
+reference/JARVISv3_ref
+!reference/constitution.md
+!reference/ecf_part*
+
+# -----------------------------------------------------------------------------
+# 2. PYTHON / BACKEND
+# -----------------------------------------------------------------------------
+# Virtual Environments
+.venv/
+venv/
+env/
+backend/.venv/
+backend/venv/
+
+# Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# -----------------------------------------------------------------------------
+# 3. FRONTEND / TAURI
+# -----------------------------------------------------------------------------
+# Node.js
+node_modules/
+frontend/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build Outputs
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# Tauri
+frontend/src-tauri/target/
+frontend/src-tauri/gen/
+
+# -----------------------------------------------------------------------------
+# 4. JARVISv4 MEMORY SYSTEM (ECF)
+# -----------------------------------------------------------------------------
+# Tier 1: Working Memory (Ephemeral YAML)
+memory/working/*.yaml
+!memory/working/.gitkeep
+
+# Tier 2: Episodic Memory (SQLite)
+memory/episodic/*.db
+memory/episodic/*.sqlite
+memory/episodic/*.db-journal
+
+# Tier 3: Semantic Memory (Vector Store)
+memory/semantic/*.index
+memory/semantic/*.faiss
+memory/semantic/*.pkl
+
+# -----------------------------------------------------------------------------
+# 5. DATA & LEARNING PIPELINE
+# -----------------------------------------------------------------------------
+# Raw extracted data
+datasets/extracted/*
+!datasets/extracted/.gitkeep
+
+# Curated training data
+datasets/curated/*
+!datasets/curated/.gitkeep
+
+# Model Adapters (LoRA/QLoRA)
+adapters/storage/*
+!adapters/storage/.gitkeep
+
+# Checkpoints
+checkpoints/
+
+# -----------------------------------------------------------------------------
+# 6. RUNTIME & SECRETS
+# -----------------------------------------------------------------------------
+# Environment Variables
+.env
+.env.*
+!.env.example
+!.env.dev.example
+
+# Large Models
+models/*
+!models/.gitkeep
+*.gguf
+*.bin
+*.pt
+*.safetensors
+
+# Logs
+logs/
+*.log
+*.err
+
+# Databases
+*.db
+*.sqlite3
+data/
