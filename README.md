@@ -1,4 +1,4 @@
-# JARVISv4
+# JARVISv4 (Just A Rather Very Intelligent System)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)
