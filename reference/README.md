@@ -25,7 +25,7 @@ git clone 'https://github.com/bentman/JARVISv3.git'
 
 ## Read-Only Policy
 **Do not edit files in these directories.** They are for reference only.
-Ensure `.vscode/settings.json` enforces this:
+Ensure `<repo-root>\.vscode/settings.json` enforces this:
 ```json
 "files.readonlyInclude": { "reference/**": true }
 ```
