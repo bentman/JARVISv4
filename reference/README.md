@@ -9,8 +9,10 @@ This directory contains read-only references to previous JARVIS versions.
 ## Setup Methods
 
 ### 1. Symbolic Links (Recommended)
-Link to existing local copies:
+Link to existing local copies from :
 ```powershell
+# From the root folder of the local repository
+pushd <repo-root>\
 # Windows (PowerShell Admin)
 New-Item -ItemType SymbolicLink -Path ".\references\JARVISv2_ref" -Target "C:\Path\ToCopied\JARVISv2"
 New-Item -ItemType SymbolicLink -Path ".\references\JARVISv3_ref" -Target "C:\Path\ToCopied\JARVISv3"
