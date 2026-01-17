@@ -22,3 +22,20 @@
 
 ## Inventory
 
+- **Governance Scaffolding**
+  - State: Verified
+  - Location: `AGENTS.md`, `CHANGE_LOG.md`, `SYSTEM_INVENTORY.md`, `Project.md`, `.clinerules/`
+  - Validation: `ls; ls .clinerules`
+    ```text
+    AGENTS.md
+    CHANGE_LOG.md
+    Project.md
+    SYSTEM_INVENTORY.md
+    .clinerules/
+    00-guardrails.md
+    10-mini-phase.md
+    20-validation-tests.md
+    30-doc-truth.md
+    40-inventory-states.md
+    50-change-log.md
+    ```
