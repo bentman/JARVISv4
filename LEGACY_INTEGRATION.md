@@ -3,7 +3,7 @@
 ## 1. Executive Summary
 JARVISv4 (Codename: `JARVISv4`) is the successor to JARVISv2 and JARVISv3. This document outlines the strategy for leveraging the high-maturity codebases of its predecessors to accelerate the implementation of the **Explicit Cognition Framework (ECF)**.
 
-**Key Objective:** Leverage approximately 80% of existing infrastructure and core services while refactoring the remaining 20% to strictly enforce stateless reasoning and artifact-driven memory.
+**Key Objective:** Leverage approximately 80% of legacy infrastructure and core services while refactoring the remaining 20% to enforce stateless reasoning and artifact-driven memory.
 
 **Reference Policy:**
 All legacy code resides in the `./reference/` directory. These paths are intentionally **read-only** and serve as the source for porting logic into the JARVISv4 codebase.

@@ -20,42 +20,49 @@ To build a **local-first, artifact-driven AI assistant** where the LLM is a **st
 
 ## 2. Repository Architecture
 
-The project follows a strict directory structure to enforce separation of concerns.
+The project follows a strict directory structure to enforce separation of concerns, aligning with the legacy integration strategy.
 
 ```text
 repo/
-├── Project.md                  # This file (Source of Truth)
-├── AGENTS.md                   # Ruling document for Agent behavior
-├── README.md                   # Quickstart & Usage
-├── docs/                       # Documentation
-│   ├── architecture/           # ECF Technical Specs (from ecf_*.md)
-│   └── runbooks/               # Operational guides (replay, train, deploy)
-├── controller/                 # Deterministic Orchestration
-│   ├── engine/                 # FSM/DAG execution logic
-│   ├── nodes/                  # Atomic workflow steps
-│   └── validators/             # Deterministic & Semantic validators
-├── agents/                     # Micro-Agent Implementations
-│   ├── planner/                # Task decomposition
-│   ├── executor/               # Tool execution
-│   ├── critic/                 # Output validation
-│   ├── curator/                # Dataset mining
-│   └── learner/                # Training orchestration
-├── memory/                     # Memory System
-│   ├── working/                # Ephemeral task state (YAML)
-│   ├── episodic/               # Immutable decision logs (SQLite)
-│   └── semantic/               # Knowledge patterns (FAISS + SQLite)
-├── tools/                      # Deterministic Tooling
-│   ├── registry/               # Tool definitions & schemas
-│   └── sandbox/                # Execution environment
-├── artifacts/                  # Data Schemas & Templates
-│   ├── schemas/                # Pydantic/JSON Schemas
-│   └── templates/              # Canonical artifact templates
-├── datasets/                   # Learning Data
-│   ├── extracted/              # Raw mined examples
-│   └── curated/                # Training-ready datasets
-└── adapters/                   # Model Weights
-    ├── registry/               # Adapter metadata
-    └── storage/                # LoRA/QLoRA files
+├── .env.example                # Prod config template (v2-style safety)
+├── .env.dev.example            # Dev config template (v2-style relaxed)
+├── docker-compose.yml          # Production stack (v3 model)
+├── docker-compose.dev.yml      # Dev stack with validation service (v3 model)
+├── Project.md                  # Source of Truth
+├── LEGACY_INTEGRATION.md       # Porting Strategy & Constraints
+├── README.md                   # Quickstart
+├── reference/                  # Read-only Legacy Codebases
+│   ├── JARVISv2_ref/           # Legacy v2 source (read-only)
+│   └── JARVISv3_ref/           # Legacy v3 source (read-only)
+├── backend/                    # Python Backend (ECF Core)
+│   ├── Dockerfile              # Production build definition
+│   ├── main.py                 # Application Entrypoint
+│   ├── core/                   # Shared Utilities (Config, Hardware, Observability)
+│   │   ├── config/             # Configuration management
+│   │   ├── observability/      # Logging & Metrics (v3 port)
+│   │   └── hardware/           # Hardware detection (v3 port)
+│   ├── controller/             # Deterministic Orchestration
+│   │   ├── engine/             # FSM/DAG Execution Logic
+│   │   └── nodes/              # Workflow Node Definitions
+│   ├── agents/                 # Micro-Agent Implementations
+│   │   ├── planner/            # Task Decomposition
+│   │   └── executor/           # Tool Execution
+│   ├── memory/                 # Memory System
+│   │   ├── stores/             # Working/Episodic/Semantic storage
+│   │   └── schemas/            # Memory Artifact definitions
+│   ├── tools/                  # Deterministic Tooling
+│   │   ├── registry/           # Tool Definitions
+│   │   └── sandbox/            # Execution Environment
+│   ├── artifacts/              # Data Schemas & Templates
+│   └── datasets/               # Learning Pipeline Data
+├── frontend/                   # React/Tauri UI (v3 stack)
+│   └── Dockerfile              # Frontend build definition
+├── tests/                      # Validation Suite (v3 structure)
+│   ├── unit/                   # Component-level tests
+│   ├── integration/            # Service-level tests
+│   └── agentic/                # E2E Workflow tests
+└── scripts/                    # Utilities
+    └── validate_backend.py     # Primary Regression Harness (v3)
 ```
 
 ---
