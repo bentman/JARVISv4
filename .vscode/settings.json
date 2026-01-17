@@ -1,0 +1,6 @@
+{
+    "files.readonlyInclude": {
+        ".clinerules/**": true,
+        "reference/**": true
+    }
+}
