@@ -31,6 +31,10 @@ repo/
 ├── Project.md                  # Source of Truth
 ├── LEGACY_INTEGRATION.md       # Porting Strategy & Constraints
 ├── README.md                   # Quickstart
+├── docs/                       # Documentation
+│   ├── governance/             # Process & Policy Artifacts
+│   ├── runbooks/               # Operational Guides
+│   └── workflows/              # Workflow Definitions
 ├── reference/                  # Read-only Legacy Codebases
 │   ├── JARVISv2_ref/           # Legacy v2 source (read-only)
 │   └── JARVISv3_ref/           # Legacy v3 source (read-only)

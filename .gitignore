@@ -18,14 +18,12 @@ Desktop.ini
 *.swp
 *.swo
 *~
-.cursorignore
-.clinerules/
 
 # Selective Ignore Rules
 reference/1st_draft
 reference/conceptual
 reference/JARVISv2_ref/
-reference/JARVISv3_ref
+reference/JARVISv3_ref/
 !reference/constitution.md
 !reference/ecf_part*
 
