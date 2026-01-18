@@ -47,9 +47,19 @@ class WorkflowEngine:
 
         raise TypeError(f"Node {node_id} is not an executable node instance")
 
+    async def execute_sequence(self, node_ids: list[str], context: Any) -> Dict[str, Any]:
+        """
+        Execute an ordered list of nodes sequentially.
+        """
+        for node_id in node_ids:
+            logger.info(f"Executing node {node_id} in sequence")
+            await self.execute_node(node_id, context)
+        
+        return self.node_results
+
     async def execute_workflow(self, context: Any):
         """
         Execute the complete workflow.
         Behavior deferred to later mini-phase.
         """
-        raise NotImplementedError("Multi-node workflow execution is deferred; single-node execution is available via execute_node.")
+        raise NotImplementedError("Multi-node workflow execution is deferred; single-node execution is available via execute_node or execute_sequence.")
