@@ -175,3 +175,13 @@
     -a---          2026-01-18  7:29 AM            275 .clineignore
     ```
   - Notes: Blocks heavy reference symlinks and venv; shifts reference/ to opt-in via @mention.
+
+- **Memory Integration Node**
+  - State: Verified
+  - Location: `backend/controller/nodes/memory_op.py`, `tests/unit/test_memory_node.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_memory_node.py -q`
+    ```text
+    .                                                                                                          [100%]
+    1 passed in 0.10s
+    ```
+  - Notes: Deterministic MemoryWriteNode that writes to MemoryItem schemas via WorkflowEngine context.
