@@ -1,0 +1,55 @@
+JARVISv4 Backend Validation Session started at 2026-01-18T09:25:32.013781
+Report File: reports\backend_validation_report_20260118_092532.txt
+============================================================
+SUCCESS: Using Python interpreter: backend\.venv\Scripts\python.exe (Python 3.12.10)
+
+============================================================
+UNIT TESTS
+============================================================
+  ✓ PASS: tests.unit.test_config::test_default_settings
+  ✓ PASS: tests.unit.test_config::test_env_override
+  ✓ PASS: tests.unit.test_config_env::test_load_from_env_file
+  ✓ PASS: tests.unit.test_config_env::test_precedence_env_var_wins_by_default
+  ✓ PASS: tests.unit.test_config_env::test_override_env_file_wins
+  ✓ PASS: tests.unit.test_controller::test_engine_initialization
+  ✓ PASS: tests.unit.test_controller::test_add_node
+  ✓ PASS: tests.unit.test_controller::test_execute_workflow_stub
+  ✓ PASS: tests.unit.test_hardware::test_hardware_service_initialization
+  ✓ PASS: tests.unit.test_hardware::test_detect_hardware_type
+  ✓ PASS: tests.unit.test_hardware::test_get_hardware_state
+  ✓ PASS: tests.unit.test_initial_sanity::test_backend_main_execution
+  ✓ PASS: tests.unit.test_memory_node::test_memory_write_node_execution
+  ✓ PASS: tests.unit.test_memory_store::test_in_memory_store_operations
+  ✓ PASS: tests.unit.test_memory_store::test_get_nonexistent
+  ✓ PASS: tests.unit.test_node_execution::test_node_execution_with_memory_and_tools
+  ✓ PASS: tests.unit.test_observability::test_metrics_collector_initialization
+  ✓ PASS: tests.unit.test_observability::test_metrics_increment
+  ✓ PASS: tests.unit.test_observability::test_setup_observability
+  ✓ PASS: tests.unit.test_tool_registry::test_tool_registration_and_invocation
+  ✓ PASS: tests.unit.test_tool_registry::test_list_tools_initially_empty
+SUCCESS: Unit: 21 tests
+
+============================================================
+INTEGRATION TESTS
+============================================================
+WARN: Directory tests/integration not found. Skipping category.
+
+============================================================
+AGENTIC TESTS
+============================================================
+WARN: Directory tests/agentic not found. Skipping category.
+
+============================================================
+BACKEND VALIDATION SUMMARY
+============================================================
+Unit Tests:        PASS
+Integration Tests: WARN
+Agentic Tests:     WARN
+============================================================
+
+[INVARIANTS]
+UNIT_TESTS=PASS
+INTEGRATION_TESTS=WARN
+AGENTIC_TESTS=WARN
+
+✅ JARVISv4 Backend is FULLY validated!
