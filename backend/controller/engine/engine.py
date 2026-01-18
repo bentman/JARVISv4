@@ -4,7 +4,7 @@ Established as an initial controller foundation aligned to the v3 porting plan.
 """
 import logging
 from typing import Dict, Any, Optional, Union
-from .types import WorkflowNode, WorkflowState
+from .types import WorkflowNode, WorkflowState, TaskContext
 from ..nodes.base import BaseNode
 
 logger = logging.getLogger(__name__)
@@ -30,10 +30,13 @@ class WorkflowEngine:
         """List all registered node IDs."""
         return list(self.nodes.keys())
 
-    async def execute_node(self, node_id: str, context: Any) -> Dict[str, Any]:
+    async def execute_node(self, node_id: str, context: TaskContext) -> Dict[str, Any]:
         """
         Execute a single workflow node end-to-end.
         """
+        if not isinstance(context, TaskContext):
+            raise TypeError(f"Context must be TaskContext, got {type(context).__name__}")
+
         node = self.get_node(node_id)
         if not node:
             raise ValueError(f"Node {node_id} not found in engine")
@@ -47,7 +50,7 @@ class WorkflowEngine:
 
         raise TypeError(f"Node {node_id} is not an executable node instance")
 
-    async def execute_sequence(self, node_ids: list[str], context: Any) -> Dict[str, Any]:
+    async def execute_sequence(self, node_ids: list[str], context: TaskContext) -> Dict[str, Any]:
         """
         Execute an ordered list of nodes sequentially.
         """

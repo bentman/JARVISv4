@@ -3,7 +3,7 @@ import asyncio
 from backend.controller.engine.engine import WorkflowEngine
 from backend.controller.nodes.callable import CallableNode
 from backend.controller.nodes.memory_op import MemoryWriteNode, MemoryReadNode
-from backend.controller.engine.types import NodeType
+from backend.controller.engine.types import NodeType, TaskContext
 from backend.memory.stores.in_memory import InMemoryStore
 
 @pytest.mark.asyncio
@@ -20,11 +20,12 @@ async def test_multi_node_workflow_execution():
     # 1. Echo node (CallableNode)
     # It takes input from context and prepares it for the next node in context
     async def echo_func(context, results):
-        input_val = context.get("input")
+        # Accessing data payload per TaskContext contract
+        input_val = context.data.get("input")
         if not input_val:
-            raise ValueError("input not found in context")
-        context["content"] = f"echo: {input_val}"
-        return {"output": context["content"]}
+            raise ValueError("input not found in context.data")
+        context.data["content"] = f"echo: {input_val}"
+        return {"output": context.data["content"]}
     
     echo_node = CallableNode(
         id="echo_node",
@@ -49,11 +50,13 @@ async def test_multi_node_workflow_execution():
     engine.add_node(write_node)
     engine.add_node(read_node)
     
-    context = {
-        "memory_store": store,
-        "input": "hello jarvis",
-        "item_id": "test_item_1"
-    }
+    context = TaskContext(
+        memory_store=store,
+        data={
+            "input": "hello jarvis",
+            "item_id": "test_item_1"
+        }
+    )
     
     # Execute sequence
     results = await engine.execute_sequence(["echo_node", "write_node", "read_node"], context)
@@ -81,8 +84,8 @@ async def test_workflow_error_handling():
     read_node = MemoryReadNode(id="read_node", description="Read node")
     engine.add_node(read_node)
     
-    # Missing memory_store in context
-    context = {"item_id": "missing"}
+    # Missing memory_store (None) in context object
+    context = TaskContext(memory_store=None, data={"item_id": "missing"})
     
     with pytest.raises(ValueError, match="memory_store not found in context"):
         await engine.execute_sequence(["read_node"], context)

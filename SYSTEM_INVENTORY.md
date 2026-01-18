@@ -194,3 +194,18 @@
     ..                                                                                                         [100%]
     2 passed in 0.08s
     ```
+
+- **TaskContext Enforcement**
+  - State: Verified
+  - Location: `backend/controller/engine/types.py`, `backend/controller/engine/engine.py`, `backend/controller/nodes/`, `tests/unit/`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Unit: 23 tests
+    Unit Tests:        PASS
+    Integration Tests: WARN
+    Agentic Tests:     WARN
+    [INVARIANTS]
+    UNIT_TESTS=PASS
+    INTEGRATION_TESTS=WARN
+    AGENTIC_TESTS=WARN
+    ```

@@ -142,3 +142,14 @@
     ..                                                                                                         [100%]
     2 passed in 0.08s
     ```
+
+- 2026-01-18 12:54
+  - Summary: Enforced TaskContext-only execution boundary (removed dict-compat), updated nodes/tests to use context.infrastructure + context.data.
+  - Scope: backend/controller/engine/engine.py, backend/controller/engine/types.py, backend/controller/nodes/callable.py, backend/controller/nodes/memory_op.py, tests/unit/test_node_execution.py, tests/unit/test_workflow_execution.py, tests/unit/test_memory_node.py
+  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Unit: 23 tests
+    Unit Tests:        PASS
+    Integration Tests: WARN
+    Agentic Tests:     WARN
+    ```

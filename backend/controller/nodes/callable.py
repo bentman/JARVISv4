@@ -3,7 +3,7 @@ Node implementation that executes a provided callable.
 """
 from typing import Any, Dict, Callable
 from .base import BaseNode
-from ..engine.types import NodeType
+from ..engine.types import NodeType, TaskContext
 
 class CallableNode(BaseNode):
     """
@@ -14,7 +14,7 @@ class CallableNode(BaseNode):
         super().__init__(id, node_type, description)
         self.func = func
 
-    async def execute(self, context: Any, results: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, context: TaskContext, results: Dict[str, Any]) -> Dict[str, Any]:
         """Invoke the stored callable."""
         import asyncio
         if asyncio.iscoroutinefunction(self.func):
