@@ -148,3 +148,12 @@
     docker-compose.dev.yml
     docker-compose.yml
     ```
+
+- **Memory Foundation (In-Memory Store)**
+  - State: Verified
+  - Location: `backend/memory/`, `tests/unit/test_memory_store.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_memory_store.py -q`
+    ```text
+    ..                                                                     [100%]
+    2 passed in 0.07s
+    ```

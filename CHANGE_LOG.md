@@ -98,3 +98,11 @@
     .env.example: # Privacy Settings (reserved: future capability)
     docker-compose.yml: # reserved: requires backend/Dockerfile
     ```
+
+- 2026-01-18 05:48
+  - Summary: Added memory schema + deterministic in-memory store + unit test.
+  - Scope: backend/memory/**, tests/unit/test_memory_store.py
+  - Evidence: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_memory_store.py -q`
+    ```text
+    2 passed in 0.07s
+    ```
