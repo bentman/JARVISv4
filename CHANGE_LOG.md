@@ -36,3 +36,12 @@
     ```text
     1 passed in 0.06s
     ```
+
+- 2026-01-17 18:54
+  - Summary: Added explicit env-file loading support to backend configuration with precedence rules.
+  - Scope: backend/core/config/settings.py, backend/requirements.txt, tests/unit/test_config_env.py
+  - Evidence: `backend/.venv/Scripts/python.exe -m pip show python-dotenv` + `pytest`
+    ```text
+    Version: 1.2.1
+    6 passed in 0.09s
+    ```

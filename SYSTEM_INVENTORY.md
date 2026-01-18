@@ -76,3 +76,16 @@
     pip 25.3 from E:\WORK\CODE\GitHub\bentman\Repositories\JARVISv4\backend\.venv\Lib\site-packages\pip (python 3.12)
     Version: 9.0.2
     ```
+
+- **Config Env Loading**
+  - State: Verified
+  - Location: `backend/core/config/settings.py`, `backend/requirements.txt`
+  - Validation: `backend/.venv/Scripts/python.exe -m pip show python-dotenv`
+    ```text
+    Version: 1.2.1
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit -q`
+    ```text
+    ......                                                                                                     [100%]
+    6 passed in 0.09s
+    ```

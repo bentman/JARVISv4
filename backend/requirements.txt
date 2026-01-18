@@ -1,2 +1,3 @@
 # Source of truth for JARVISv4 backend dependencies
 pytest>=9.0.2
+python-dotenv>=1.2.1
