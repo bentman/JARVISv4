@@ -166,3 +166,12 @@
     .                                                                                                          [100%]
     1 passed in 0.07s
     ```
+
+- **Context Boundary Hardening**
+  - State: Verified
+  - Location: `.clineignore`
+  - Validation: `ls .clineignore`
+    ```text
+    -a---          2026-01-18  7:29 AM            275 .clineignore
+    ```
+  - Notes: Blocks heavy reference symlinks and venv; shifts reference/ to opt-in via @mention.

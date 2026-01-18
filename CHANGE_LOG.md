@@ -114,3 +114,13 @@
     ```text
     1 passed in 0.07s
     ```
+
+- 2026-01-18 07:29
+  - Summary: Created .clineignore to harden context boundaries and established "opt-in via @mention" workflow for reference materials.
+  - Scope: .clineignore
+  - Evidence: `ls .clineignore`
+    ```text
+    Mode                 LastWriteTime         Length Name
+    ----                 -------------         ------ ----
+    -a---          2026-01-18  7:29 AM            275 .clineignore
+    ```
