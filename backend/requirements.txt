@@ -1,0 +1,2 @@
+# Source of truth for JARVISv4 backend dependencies
+pytest>=9.0.2

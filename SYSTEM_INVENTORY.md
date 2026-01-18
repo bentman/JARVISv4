@@ -39,3 +39,40 @@
     40-inventory-states.md
     50-change-log.md
     ```
+
+- **Backend Baseline**
+  - State: Verified
+  - Location: `backend/requirements.txt`, `backend/main.py`, `backend/.venv/`
+  - Validation: `backend/.venv/Scripts/python.exe backend/main.py`
+    ```text
+    JARVISv4 Backend initialized.
+    ```
+
+- **Validation Harness (Backend)**
+  - State: Verified
+  - Location: `scripts/validate_backend.py`, `reports/`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    [PASS] backend/main.py found
+    [PASS] Venv Python Health: Python 3.12.10
+    Validation PASSED.
+    Report saved to: reports\backend_validation_report_20260117_175319.txt
+    ```
+
+- **Unit Testing Baseline**
+  - State: Verified
+  - Location: `tests/unit/`, `backend/requirements.txt`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit -q`
+    ```text
+    .                                                                                                          [100%]
+    1 passed in 0.06s
+    ```
+
+- **Venv Toolchain**
+  - State: Verified
+  - Location: `backend/.venv/`, `backend/requirements.txt`
+  - Validation: `backend/.venv/Scripts/python.exe -m pip --version; backend/.venv/Scripts/python.exe -m pip show pytest`
+    ```text
+    pip 25.3 from E:\WORK\CODE\GitHub\bentman\Repositories\JARVISv4\backend\.venv\Lib\site-packages\pip (python 3.12)
+    Version: 9.0.2
+    ```
