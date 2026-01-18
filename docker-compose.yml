@@ -1,0 +1,41 @@
+# JARVISv4 Production Stack
+# Ported from reference/JARVISv3_ref/docker-compose.yml
+
+services:
+  backend:
+    # reserved: requires backend/Dockerfile
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    image: jarvisv4-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4.db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - jarvis_data:/app/data # reserved: pending volume setup
+    depends_on:
+      - redis
+    networks:
+      - JARVISv4_network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - JARVISv4_network
+
+  frontend:
+    # reserved: frontend not yet implemented
+    image: jarvisv4-frontend
+    networks:
+      - JARVISv4_network
+
+networks:
+  JARVISv4_network:
+    driver: bridge
+
+volumes:
+  jarvis_data:

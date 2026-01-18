@@ -89,3 +89,62 @@
     ......                                                                                                     [100%]
     6 passed in 0.09s
     ```
+
+- **Observability Foundation**
+  - State: Verified
+  - Location: `backend/core/observability/`, `backend/requirements.txt`
+  - Validation: `backend/.venv/Scripts/python.exe -m pip show pydantic`
+    ```text
+    Version: 2.12.5
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_observability.py -q`
+    ```text
+    ...                                                                                                        [100%]
+    3 passed in 0.10s
+    ```
+
+- **Hardware Detection Service**
+  - State: Verified
+  - Location: `backend/core/hardware/`, `backend/requirements.txt`
+  - Validation: `backend/.venv/Scripts/python.exe -m pip show psutil`
+    ```text
+    Version: 7.2.1
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe -m pip show pytest-asyncio`
+    ```text
+    Version: 1.3.0
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_hardware.py -q`
+    ```text
+    ...                                                                                                        [100%]
+    3 passed in 0.12s
+    ```
+
+- **Controller Foundation**
+  - State: Verified
+  - Location: `backend/controller/`, `tests/unit/test_controller.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit -q`
+    ```text
+    ...............                                                                                            [100%]
+    15 passed in 0.20s
+    ```
+
+- **Tool Registry**
+  - State: Verified
+  - Location: `backend/tools/registry/`, `tests/unit/test_tool_registry.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_tool_registry.py -q`
+    ```text
+    ..                                                                                                         [100%]
+    2 passed in 0.05s
+    ```
+
+- **Root Config Templates**
+  - State: Verified
+  - Location: `.env.example`, `.env.dev.example`, `docker-compose.yml`, `docker-compose.dev.yml`
+  - Validation: `ls .env.example, .env.dev.example, docker-compose.yml, docker-compose.dev.yml`
+    ```text
+    .env.dev.example
+    .env.example
+    docker-compose.dev.yml
+    docker-compose.yml
+    ```

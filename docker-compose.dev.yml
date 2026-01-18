@@ -1,0 +1,42 @@
+# JARVISv4 Development Stack
+# Ported from reference/JARVISv3_ref/docker-compose.dev.yml
+
+services:
+  backend:
+    # reserved: requires backend/Dockerfile
+    # build:
+    #   context: ./backend
+    #   dockerfile: Dockerfile
+    image: jarvisv4-backend-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4_dev.db
+      - REDIS_URL=redis://redis:6379/0
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - ./backend:/app # reserved: sync logic pending
+    depends_on:
+      - redis
+    networks:
+      - JARVISv4_network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - JARVISv4_network
+
+  validate:
+    # reserved: ported from v3 dev reference
+    image: jarvisv4-backend-dev
+    command: ["python", "scripts/validate_backend.py"]
+    depends_on:
+      - backend
+    networks:
+      - JARVISv4_network
+
+networks:
+  JARVISv4_network:
+    driver: bridge
