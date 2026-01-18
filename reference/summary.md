@@ -1,3 +1,7 @@
+# This document is reference-only planning notes. 
+# Not authoritative. Reference only if specifically instructed.
+# Terminology may lag core docs; follow `..\Project.md` + `..\AGENTS.md`
+
 # Local-First AI Agent Architecture: The Explicit Cognition Framework (ECF)
 
 **Document Classification:** Research Summary with Verified Findings  

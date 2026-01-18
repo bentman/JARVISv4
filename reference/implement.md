@@ -1,5 +1,9 @@
-# IMPLEMENT.md
-Artifact-Driven, Local-First Agent System — Implementation Plan Skeleton (No Timelines)
+# This document is reference-only planning notes. 
+# Not authoritative. Reference only if specifically instructed.
+# Terminology may lag core docs; follow `..\Project.md` + `..\AGENTS.md`
+
+# reference\IMPLEMENT.md
+Artifact-Driven, Local-First Agent System — Implementation Plan Baseline (No Timelines)
 
 > **Goal**
 > Build a local-first assistant as a **deterministic system** where the model is a **stateless reasoning component**.
@@ -402,7 +406,7 @@ Each example includes:
 
 ### Dependency order
 - [ ] Artifacts + schemas + templates + ledger
-- [ ] Controller skeleton (FSM/DAG + transitions)
+- [ ] Controller foundation (FSM/DAG + transitions)
 - [ ] Tool executor + transcripts (sandbox + validation)
 - [ ] Micro-agent role shells (contracts + unit tests)
 - [ ] Observability + replay

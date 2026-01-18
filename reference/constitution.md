@@ -1,4 +1,8 @@
-# AGENTS.md: The Agentic Constitution
+# This document is reference-only planning notes. 
+# Not authoritative. Reference only if specifically instructed.
+# Terminology may lag core docs; follow `..\Project.md` + `..\AGENTS.md`
+
+# constitution.md: The Agentic Constitution
 
 > **Ruling Document**
 > This document defines the immutable laws, roles, and protocols that all Agentic AI components within this system must adhere to. Deviations from this constitution are considered system failures.

@@ -157,3 +157,12 @@
     ..                                                                     [100%]
     2 passed in 0.07s
     ```
+
+- **Node Execution Path**
+  - State: Verified
+  - Location: `backend/controller/engine/engine.py`, `backend/controller/nodes/callable.py`, `tests/unit/test_node_execution.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_node_execution.py -q`
+    ```text
+    .                                                                                                          [100%]
+    1 passed in 0.07s
+    ```

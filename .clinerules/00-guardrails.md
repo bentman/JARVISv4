@@ -8,6 +8,7 @@
 - No web/MCP lookups unless explicitly requested by the User.
 - Truth = evidence. Any completion claim must be backed by a command run and a minimal excerpt.
 - Keep outputs small: only the lines needed to prove the claim; no large log pastes unless diagnosing failure.
+- Avoid terms: skeleton, stub, placeholder, shim. Prefer: baseline, foundation, initial.
 - Repo anchors:
   - Backend entrypoint: `backend/main.py`
   - Validation harness: `scripts/validate_backend.py`

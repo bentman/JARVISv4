@@ -106,3 +106,11 @@
     ```text
     2 passed in 0.07s
     ```
+
+- 2026-01-18 06:07
+  - Summary: Implemented single-node execution path + callable node; validated tool+memory interaction.
+  - Scope: backend/controller/engine/engine.py, backend/controller/nodes/callable.py, tests/unit/test_node_execution.py
+  - Evidence: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_node_execution.py -q`
+    ```text
+    1 passed in 0.07s
+    ```
