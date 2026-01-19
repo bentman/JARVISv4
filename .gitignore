@@ -130,6 +130,6 @@ data/
 # Agents
 .aider*
 .clineignore
-.clinerules/*
-.continue/*
-.roo/rules/*
+.clinerules/
+.continue/
+.roo/rules/
