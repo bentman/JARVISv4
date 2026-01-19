@@ -1,6 +1,8 @@
 {
     "files.readonlyInclude": {
         ".clinerules/**": true,
+        ".continue/**": true,
+        ".roo/rules/**": true,
         "reference/**": true
     }
 }

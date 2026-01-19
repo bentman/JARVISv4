@@ -126,4 +126,9 @@ logs/
 *.db
 *.sqlite3
 data/
+
+# Agents
 .aider*
+.clinerules/*
+.continue/*
+.roo/rules/*
