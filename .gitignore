@@ -126,3 +126,4 @@ logs/
 *.db
 *.sqlite3
 data/
+.aider*

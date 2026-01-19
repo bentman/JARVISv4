@@ -146,10 +146,41 @@
 - 2026-01-18 12:54
   - Summary: Enforced TaskContext-only execution boundary (removed dict-compat), updated nodes/tests to use context.infrastructure + context.data.
   - Scope: backend/controller/engine/engine.py, backend/controller/engine/types.py, backend/controller/nodes/callable.py, backend/controller/nodes/memory_op.py, tests/unit/test_node_execution.py, tests/unit/test_workflow_execution.py, tests/unit/test_memory_node.py
-  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
     ```text
     SUCCESS: Unit: 23 tests
     Unit Tests:        PASS
     Integration Tests: WARN
     Agentic Tests:     WARN
+    ```
+
+- 2026-01-19 06:10
+  - Summary: Implemented SQLite-backed episodic memory store and established first integration test (proving persistence).
+  - Scope: backend/memory/stores/sqlite_store.py, tests/integration/test_sqlite_memory_store.py
+  - Evidence: `backend/.venv/Scripts/python.exe -m pytest tests/integration -q`
+    ```text
+    ..                                                                       [100%]
+    2 passed in 0.40s
+    ```
+    - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Unit: 23 tests
+    SUCCESS: Integration: 2 tests
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     WARN
+    ```
+
+- 2026-01-19 06:51
+  - Summary: Added settings-driven memory persistence selection + memory store factory + workflow persistence integration test.
+  - Scope: backend/core/config/settings.py, backend/memory/factory.py, tests/integration/test_workflow_persistence.py
+  - Evidence: `backend/.venv/Scripts/python.exe -m pytest tests/integration -q`
+    ```text
+    ...                                                                      [100%]
+    3 passed in 0.13s
+    ```
+  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Integration: 3 tests
+    Integration Tests: PASS
     ```

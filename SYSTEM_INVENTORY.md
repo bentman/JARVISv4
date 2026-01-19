@@ -198,7 +198,7 @@
 - **TaskContext Enforcement**
   - State: Verified
   - Location: `backend/controller/engine/types.py`, `backend/controller/engine/engine.py`, `backend/controller/nodes/`, `tests/unit/`
-  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
     ```text
     SUCCESS: Unit: 23 tests
     Unit Tests:        PASS
@@ -208,4 +208,40 @@
     UNIT_TESTS=PASS
     INTEGRATION_TESTS=WARN
     AGENTIC_TESTS=WARN
+    ```
+
+- **Episodic Memory (SQLite Store)**
+  - State: Verified
+  - Location: `backend/memory/stores/sqlite_store.py`, `tests/integration/test_sqlite_memory_store.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/integration -q`
+    ```text
+    ..                                                                       [100%]
+    2 passed in 0.40s
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py` (with UTF-8 env)
+    ```text
+    SUCCESS: Unit: 23 tests
+    SUCCESS: Integration: 2 tests
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     WARN
+    [INVARIANTS]
+    UNIT_TESTS=PASS
+    INTEGRATION_TESTS=PASS
+    AGENTIC_TESTS=WARN
+    ```
+  - Notes: Validates persistence across instance restarts (write -> restart -> read).
+
+- **Memory Persistence (SQLite via Factory)**
+  - State: Verified
+  - Location: `backend/memory/stores/sqlite_store.py`, `backend/memory/factory.py`, `backend/core/config/settings.py`, `tests/integration/test_workflow_persistence.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/integration -q`
+    ```text
+    ...                                                                      [100%]
+    3 passed in 0.13s
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Integration: 3 tests
+    Integration Tests: PASS
     ```
