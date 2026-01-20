@@ -304,48 +304,27 @@
   - Notes: Tactical agent responsible for tool selection and invocation. Includes fallback logic for unmatched requests.
 
 - **ECF Controller**
-  - State: Verified
+  - State: Verified (Audit Date: 2026-01-19)
   - Location: `backend/core/controller.py`, `backend/main.py`
-  - Validation: `pytest tests/unit/test_ecf_controller.py` (3/3 PASS)
-  - Validation: `python scripts/first_flight.py` (E2E Test)
-    ```text
-    ✅ SUCCESS: Task archived...
-    ```
-  - Notes: Authoritative FSM "Cognitive Spine" coordinating State, Planning, and Execution. Supports CLI goal execution.
+  - Validation: `pytest tests/unit/test_ecf_controller.py`, `pytest tests/agentic/test_ecf_core_flow.py`
+  - Notes: Authoritative FSM "Cognitive Spine" coordinating State, Planning, and Execution. Supports CLI goal execution. Validated via formal unit and E2E agentic tiers.
 
 - **Episode Curator**
-  - State: Verified
+  - State: Verified (Audit Date: 2026-01-19)
   - Location: `backend/learning/curator.py`, `backend/datasets/`
-  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_curator.py`
-    ```text
-    Created mock archived task at tasks\archive\test_validation\task_val_123_completed.json
-    Curated 2 examples.
-    --- Example for planner ---
-    Instruction: Decompose this goal into a concrete plan.
-    --- Example for executor ---
-    Instruction: Execute this task step: Calculate square root
-    Output: {"tool": "math_tool", "params": {"action": "sqrt", "value": 16}, ...}
-    ```
+  - Validation: `pytest tests/unit/test_curator.py`
   - Notes: Extracts high-quality Alpaca-style training data from archived task traces. Instrumented to capture tool name and parameters.
 
 - **Basal Dataset**
-  - State: Verified
+  - State: Verified (Audit Date: 2026-01-19)
   - Location: `data/training/basal_set.json`
-  - Validation: `cat data/training/basal_set.json`
+  - Validation: `pytest tests/unit/test_mixer.py` (via integration)
   - Notes: Anchor dataset of 5 "Golden Examples" (2 Planner, 3 Executor) to prevent catastrophic forgetting.
 
 - **Dataset Mixer**
-  - State: Verified
+  - State: Verified (Audit Date: 2026-01-19)
   - Location: `backend/learning/mixer.py`
-  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_mixer.py`
-    ```text
-    Results:
-    Curriculum size: 14
-    Mixed dataset size: 20
-    Actual curriculum ratio: 70.00%
-    Basal items (Golden) count: 6
-    ✅ Validation Successful: 70/30 split achieved
-    ```
+  - Validation: `pytest tests/unit/test_mixer.py`
   - Notes: Handles the weighted blending of new curriculum data with basal anchor data; includes oversampling and shuffling.
 
 - **Regression Suite**
@@ -354,15 +333,7 @@
   - Notes: Evaluation blueprint for validating candidate models against a 95% pass rate threshold. Currently a functional stub.
 
 - **Learner (Orchestrator)**
-  - State: Verified
-  - Location: `backend/learning/train.py`, `backend/learning/config.yaml`, `scripts/trigger_learning.py`
-  - Validation: `python scripts/trigger_learning.py --dry-run`
-    ```text
-    INFO:backend.learning.train:Starting Learning Cycle (Dry Run: True)
-    INFO:backend.learning.train:Preparing data using DatasetMixer...
-    INFO:backend.learning.train:[DRY RUN] Mixer initialized with 5 basal examples.
-    INFO:backend.learning.train:Initializing Trainer Configuration:
-    INFO:backend.learning.train: - LoRA: Rank=16, Alpha=32
-    ✅ Learning Cycle trigger COMPLETED.
-    ```
+  - State: Verified (Audit Date: 2026-01-19)
+  - Location: `backend/learning/train.py`, `backend/learning/config.yaml`
+  - Validation: `pytest tests/integration/test_learner_pipeline.py`
   - Notes: Training pipeline orchestrator that coordinates dataset mixing and trainer initialization. Supports LoRA hyperparameter configuration and lightweight dry-run validation.

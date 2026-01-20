@@ -1,14 +1,11 @@
 import asyncio
 import json
+import pytest
 import respx
-import logging
 from httpx import Response
 from pathlib import Path
 from backend.core.controller import ECFController
 from backend.tools.base import BaseTool, ToolDefinition
-
-# Setup logging to see the transition trail
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 class IntegrationTemplateTool(BaseTool):
     @property
@@ -27,16 +24,16 @@ class IntegrationTemplateTool(BaseTool):
     async def execute(self, **kwargs):
         return {"processed_data": kwargs.get("data"), "status": "INTEGRATION_SUCCESS"}
 
-async def first_flight():
-    print("🚀 Starting First Flight: ECF Controller End-to-End Test\n")
+@pytest.mark.asyncio
+async def test_ecf_first_flight_e2e(tmp_path, monkeypatch):
+    # Setup isolated environment for the test
+    monkeypatch.setenv("WORKING_STORAGE_PATH", str(tmp_path / "tasks"))
     
     controller = ECFController()
-    # Register our standard tool
     controller.registry.register_tool(IntegrationTemplateTool())
     
     goal = "Execute a first flight integration test"
     
-    # Mock LLM behavior
     planner_plan = {
         "tasks": [
             {"id": "1", "description": "Run the integration template tool", "dependencies": [], "estimated_duration": "1m"}
@@ -48,10 +45,7 @@ async def first_flight():
         "rationale": "Matches the first flight goal"
     }
     
-    async with respx.mock(base_url="http://localhost:11434/v1") as respx_mock:
-        # Default settings might point to localhost if not configured, or openai. 
-        # OpenAIProvider in test usually gets dummy base_url or defaults.
-        # Let's ensure the controller uses a predictable base_url for the mock.
+    async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
         controller.llm.client.base_url = "http://mock-llm/v1"
         
         respx_mock.post("http://mock-llm/v1/chat/completions").mock(side_effect=[
@@ -59,19 +53,18 @@ async def first_flight():
             Response(200, json={"choices": [{"message": {"content": json.dumps(executor_selection)}}]})
         ])
         
-        print(f"Goal: {goal}")
         task_id = await controller.run_task(goal)
         
-        print(f"\nFinal Task ID: {task_id}")
-        print(f"Final Controller State: {controller.state.value}")
+        assert task_id.startswith("task_")
+        assert controller.state.value == "COMPLETED"
         
-        # Verify result in state_manager (archive check)
-        archive_path = Path("tasks/archive")
-        files = list(archive_path.rglob(f"*{task_id}*"))
-        if files:
-            print(f"✅ SUCCESS: Task archived at {files[0]}")
-        else:
-            print("❌ FAILURE: Task NOT found in archive.")
-
-if __name__ == "__main__":
-    asyncio.run(first_flight())
+        # Verify archive
+        archive_files = list((tmp_path / "tasks" / "archive").rglob(f"*{task_id}*"))
+        assert len(archive_files) == 1
+        
+        with open(archive_files[0], "r") as f:
+            saved_state = json.load(f)
+            assert saved_state["status"] == "COMPLETED"
+            assert saved_state["goal"] == goal
+            assert "tool_name" in saved_state["completed_steps"][0]
+            assert saved_state["completed_steps"][0]["tool_name"] == "integration_template_tool"
