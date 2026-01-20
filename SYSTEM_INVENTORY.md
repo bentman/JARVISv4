@@ -327,3 +327,42 @@
     Output: {"tool": "math_tool", "params": {"action": "sqrt", "value": 16}, ...}
     ```
   - Notes: Extracts high-quality Alpaca-style training data from archived task traces. Instrumented to capture tool name and parameters.
+
+- **Basal Dataset**
+  - State: Verified
+  - Location: `data/training/basal_set.json`
+  - Validation: `cat data/training/basal_set.json`
+  - Notes: Anchor dataset of 5 "Golden Examples" (2 Planner, 3 Executor) to prevent catastrophic forgetting.
+
+- **Dataset Mixer**
+  - State: Verified
+  - Location: `backend/learning/mixer.py`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_mixer.py`
+    ```text
+    Results:
+    Curriculum size: 14
+    Mixed dataset size: 20
+    Actual curriculum ratio: 70.00%
+    Basal items (Golden) count: 6
+    ✅ Validation Successful: 70/30 split achieved
+    ```
+  - Notes: Handles the weighted blending of new curriculum data with basal anchor data; includes oversampling and shuffling.
+
+- **Regression Suite**
+  - State: Implemented
+  - Location: `backend/learning/regression.py`
+  - Notes: Evaluation blueprint for validating candidate models against a 95% pass rate threshold. Currently a functional stub.
+
+- **Learner (Orchestrator)**
+  - State: Verified
+  - Location: `backend/learning/train.py`, `backend/learning/config.yaml`, `scripts/trigger_learning.py`
+  - Validation: `python scripts/trigger_learning.py --dry-run`
+    ```text
+    INFO:backend.learning.train:Starting Learning Cycle (Dry Run: True)
+    INFO:backend.learning.train:Preparing data using DatasetMixer...
+    INFO:backend.learning.train:[DRY RUN] Mixer initialized with 5 basal examples.
+    INFO:backend.learning.train:Initializing Trainer Configuration:
+    INFO:backend.learning.train: - LoRA: Rank=16, Alpha=32
+    ✅ Learning Cycle trigger COMPLETED.
+    ```
+  - Notes: Training pipeline orchestrator that coordinates dataset mixing and trainer initialization. Supports LoRA hyperparameter configuration and lightweight dry-run validation.

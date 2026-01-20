@@ -276,3 +276,26 @@
     Output: {"tool": "math_tool", "params": {"action": "sqrt", "value": 16}, ...}
     ✅ Validation Successful
     ```
+
+- 2026-01-19 19:48
+  - Summary: Implemented DatasetMixer and RegressionSuite blueprint; scaffolded Basal Dataset with Golden Examples.
+  - Scope: data/training/basal_set.json, backend/learning/mixer.py, backend/learning/regression.py, scripts/validate_mixer.py
+  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_mixer.py`
+    ```text
+    Actual curriculum ratio: 70.00%
+    Basal items (Golden) count: 6
+    ✅ Validation Successful: 70/30 split achieved
+    ```
+
+- 2026-01-19 19:15
+  - Summary: Realized ECF Controller and validated via successful E2E First Flight. [Late Entry]
+  - Scope: backend/core/controller.py, scripts/first_flight.py
+  - Evidence: `python scripts/first_flight.py`
+    ```text
+    INFO: Transitioning to PLANNING...
+    INFO: Created task task_20260119_184652_adedd28a...
+    INFO: Transitioning to EXECUTING...
+    INFO: Calling tool: integration_template_tool
+    INFO: Task task_20260119_184652_adedd28a COMPLETED and ARCHIVED.
+    ✅ SUCCESS: Task archived...
+    ```

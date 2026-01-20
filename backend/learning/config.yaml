@@ -1,0 +1,15 @@
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  bias: "none"
+training:
+  learning_rate: 2.0e-4
+  optim: "adamw_8bit"
+  max_steps: 500
+  batch_size: 4
+  gradient_accumulation_steps: 4
+paths:
+  basal: "data/training/basal_set.json"
+  curriculum: "backend/datasets/alpaca_data_val.json"
+  output_dir: "models/adapters/candidate"
