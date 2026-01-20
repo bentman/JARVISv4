@@ -1,0 +1,14 @@
+{
+  "task_id": "task_20260119_142414_65fd0e31",
+  "goal": "Evidence Task",
+  "status": "CREATED",
+  "domain": "general",
+  "constraints": [],
+  "current_step": null,
+  "completed_steps": [],
+  "next_steps": [],
+  "metadata": {
+    "created_at": "2026-01-19T14:24:14.349253",
+    "priority": "normal"
+  }
+}

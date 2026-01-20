@@ -245,3 +245,70 @@
     SUCCESS: Integration: 3 tests
     Integration Tests: PASS
     ```
+
+- **Tier 1 Working State Manager (Ephemeral)**
+  - State: Verified
+  - Location: `backend/memory/working_state.py`, `tests/unit/test_working_state.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_working_state.py -q`
+    ```text
+    ........                                                                                     [100%]
+    8 passed in 0.26s
+    ```
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    SUCCESS: Unit: 31 tests
+    SUCCESS: Integration: 3 tests
+    ✅ JARVISv4 Backend is FULLY validated!
+    ```
+  - Notes: Implements ECF Tier 1 memory using JSON for ephemeral task state tracking with atomic writes and schema validation.
+
+- **Planner Agent**
+  - State: Verified
+  - Location: `backend/agents/planner/planner.py`, `tests/unit/test_planner.py`
+  - Validation: `backend/.venv/Scripts/python.exe -m pytest tests/unit/test_planner.py -q`
+    ```text
+    .....                                                                    [100%]
+    5 passed in 1.54s
+    ```
+  - Validation: `python scripts/verify_planner_integration.py`
+    ```text
+    ✅ Task file created.
+    ✅ Data validation PASSED.
+    ```
+  - Notes: Stateless reasoning component integrated with `OpenAIProvider`. Verified to produce valid DAG task files in `tasks/`.
+
+- **LLM Provider Service**
+  - State: Verified
+  - Location: `backend/core/llm/`, `scripts/test_llm_connectivity.py`
+  - Validation: `pytest tests/unit/test_llm_provider.py` (5/5 PASS)
+  - Validation: `python scripts/test_llm_connectivity.py` (Smoke Test)
+    ```text
+    INFO:__main__:✅ SMOKE TEST PASSED: Handshake verified.
+    ```
+  - Notes: Foundational LLM interface supporting OpenAI-compatible endpoints (Ollama, vLLM, Cloud). Includes exponential backoff retries.
+
+- **Tool Registry**
+  - State: Verified
+  - Location: `backend/tools/registry/`, `backend/tools/base.py`
+  - Validation: `pytest tests/unit/test_executor.py` (Indirectly via Executor)
+  - Notes: Rich tool registry supporting metadata discovery for LLMs and JSON Schema validation for parameters.
+
+- **Executor Agent**
+  - State: Verified
+  - Location: `backend/agents/executor/executor.py`, `tests/unit/test_executor.py`
+  - Validation: `pytest tests/unit/test_executor.py` (3/3 PASS)
+  - Validation: `python scripts/verify_executor_integration.py` (Smoke Test)
+    ```text
+    ✅ SMOKE TEST PASSED
+    ```
+  - Notes: Tactical agent responsible for tool selection and invocation. Includes fallback logic for unmatched requests.
+
+- **ECF Controller**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `backend/main.py`
+  - Validation: `pytest tests/unit/test_ecf_controller.py` (3/3 PASS)
+  - Validation: `python scripts/first_flight.py` (E2E Test)
+    ```text
+    ✅ SUCCESS: Task archived...
+    ```
+  - Notes: Authoritative FSM "Cognitive Spine" coordinating State, Planning, and Execution. Supports CLI goal execution.
