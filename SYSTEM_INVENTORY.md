@@ -312,3 +312,18 @@
     ✅ SUCCESS: Task archived...
     ```
   - Notes: Authoritative FSM "Cognitive Spine" coordinating State, Planning, and Execution. Supports CLI goal execution.
+
+- **Episode Curator**
+  - State: Verified
+  - Location: `backend/learning/curator.py`, `backend/datasets/`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_curator.py`
+    ```text
+    Created mock archived task at tasks\archive\test_validation\task_val_123_completed.json
+    Curated 2 examples.
+    --- Example for planner ---
+    Instruction: Decompose this goal into a concrete plan.
+    --- Example for executor ---
+    Instruction: Execute this task step: Calculate square root
+    Output: {"tool": "math_tool", "params": {"action": "sqrt", "value": 16}, ...}
+    ```
+  - Notes: Extracts high-quality Alpaca-style training data from archived task traces. Instrumented to capture tool name and parameters.

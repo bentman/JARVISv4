@@ -101,7 +101,15 @@ class WorkingStateManager:
             
         return state
 
-    def complete_step(self, task_id: str, step_index: int, outcome: str, artifact: Optional[str] = None) -> Dict[str, Any]:
+    def complete_step(
+        self, 
+        task_id: str, 
+        step_index: int, 
+        outcome: str, 
+        artifact: Optional[str] = None,
+        tool_name: Optional[str] = None,
+        tool_params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Mark current step as completed."""
         state = self.load_task(task_id)
         
@@ -116,6 +124,8 @@ class WorkingStateManager:
             "description": state["current_step"].get("description"),
             "outcome": outcome,
             "artifact": artifact,
+            "tool_name": tool_name,
+            "tool_params": tool_params,
             "completed_at": datetime.now().isoformat()
         }
         

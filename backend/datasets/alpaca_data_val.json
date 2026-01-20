@@ -1,0 +1,21 @@
+[
+  {
+    "instruction": "Decompose this goal into a concrete plan.",
+    "input": "{\"goal\": \"Test tool metadata persistence\", \"domain\": \"testing\", \"constraints\": [\"constraint_1\"]}",
+    "output": "{\"tasks\": [{\"id\": \"0\", \"description\": \"Calculate square root\"}]}",
+    "metadata": {
+      "task_id": "task_val_123",
+      "agent": "planner"
+    }
+  },
+  {
+    "instruction": "Execute this task step: Calculate square root",
+    "input": "{\"task_id\": \"task_val_123\", \"goal\": \"Test tool metadata persistence\"}",
+    "output": "{\"tool\": \"math_tool\", \"params\": {\"action\": \"sqrt\", \"value\": 16}, \"rationale\": \"Extracted from successful execution trace.\"}",
+    "metadata": {
+      "task_id": "task_val_123",
+      "step_index": 0,
+      "agent": "executor"
+    }
+  }
+]

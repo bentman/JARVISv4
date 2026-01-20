@@ -262,3 +262,17 @@
     INFO: Task task_20260119_184652_adedd28a COMPLETED and ARCHIVED.
     ✅ SUCCESS: Task archived...
     ```
+
+- 2026-01-19 19:38
+  - Summary: Implemented Episode Curator and instrumented Controller/StateManager for tool metadata persistence.
+  - Scope: backend/memory/working_state.py, backend/core/controller.py, backend/learning/curator.py, scripts/validate_curator.py
+  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_curator.py`
+    ```text
+    Curated 2 examples.
+    --- Example for planner ---
+    Instruction: Decompose this goal into a concrete plan.
+    --- Example for executor ---
+    Instruction: Execute this task step: Calculate square root
+    Output: {"tool": "math_tool", "params": {"action": "sqrt", "value": 16}, ...}
+    ✅ Validation Successful
+    ```

@@ -116,7 +116,9 @@ class ECFController:
                     task_id,
                     step_index=step_index,
                     outcome="SUCCESS",
-                    artifact=str(outcome.get("result"))
+                    artifact=str(outcome.get("result")),
+                    tool_name=outcome.get("tool"),
+                    tool_params=outcome.get("params")
                 )
             
             # PHASE 3: ARCHIVING
