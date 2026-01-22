@@ -7,12 +7,17 @@ def test_backend_main_execution():
     repo_root = Path(__file__).parent.parent.parent
     main_script = repo_root / "backend" / "main.py"
     
-    # Use the current python interpreter (venv)
+    # Use the current python interpreter (venv) with repo root in PYTHONPATH
+    import os
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(repo_root)
+    
     result = subprocess.run(
         [sys.executable, str(main_script)],
         capture_output=True,
         text=True,
-        timeout=5
+        timeout=5,
+        env=env
     )
     
     assert result.returncode == 0

@@ -20,6 +20,16 @@ class Settings:
     llm_model: str = "gpt-4o"
     llm_base_url: Optional[str] = None
     llm_api_key: Optional[str] = None
+    
+    # Privacy Settings (ECF Tier 4)
+    privacy_secret_key: str = "dev-secret-do-not-use-in-production-12345"
+    privacy_salt: str = "v4-salt-static"
+    privacy_redaction_level: str = "partial"  # options: none, partial, strict
+
+    # Budget Settings
+    budget_enforcement_level: str = "log"  # none, log, block
+    budget_limits: Optional[dict] = None  # Dict of category: limit
+    budget_db_path: Path = Path("data/budget.db")
 
 def load_settings(env_file: Optional[Path] = None, override_environ: bool = False) -> Settings:
     """Load settings from environment variables and optional env file."""
@@ -36,5 +46,11 @@ def load_settings(env_file: Optional[Path] = None, override_environ: bool = Fals
         llm_provider=os.environ.get("LLM_PROVIDER", "openai"),
         llm_model=os.environ.get("LLM_MODEL", "gpt-4o"),
         llm_base_url=os.environ.get("LLM_BASE_URL"),
-        llm_api_key=os.environ.get("LLM_API_KEY")
+        llm_api_key=os.environ.get("LLM_API_KEY"),
+        privacy_secret_key=os.environ.get("PRIVACY_SECRET_KEY", "dev-secret-do-not-use-in-production-12345"),
+        privacy_salt=os.environ.get("PRIVACY_SALT", "v4-salt-static"),
+        privacy_redaction_level=os.environ.get("PRIVACY_REDACTION_LEVEL", "partial"),
+        budget_enforcement_level=os.environ.get("BUDGET_ENFORCEMENT_LEVEL", "log"),
+        budget_limits=eval(os.environ.get("BUDGET_LIMITS", "{}")),  # Using eval for simplicity in parsing dict from env
+        budget_db_path=Path(os.environ.get("BUDGET_DB_PATH", "data/budget.db"))
     )
