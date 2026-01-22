@@ -1,0 +1,39 @@
+JARVISv4 Backend Validation Session started at 2026-01-22T00:48:24.983223
+Report File: reports\backend_validation_report_20260122_004824.txt
+============================================================
+SUCCESS: Using Python interpreter: backend\.venv\Scripts\python.exe (Python 3.12.10)
+
+============================================================
+UNIT TESTS
+============================================================
+  ✗ ERROR: ::tests.unit.test_ecf_controller
+  ✗ ERROR: ::tests.unit.test_executor
+  ✗ ERROR: ::tests.unit.test_planner
+FAILED: Unit: 3 tests, 3 errors
+
+============================================================
+INTEGRATION TESTS
+============================================================
+  ✗ ERROR: ::tests.integration.test_learning_cycle
+FAILED: Integration: 1 tests, 1 errors
+
+============================================================
+AGENTIC TESTS
+============================================================
+  ✗ ERROR: ::tests.agentic.test_ecf_core_flow
+FAILED: Agentic: 1 tests, 1 errors
+
+============================================================
+BACKEND VALIDATION SUMMARY
+============================================================
+Unit Tests:        FAIL
+Integration Tests: FAIL
+Agentic Tests:     FAIL
+============================================================
+
+[INVARIANTS]
+UNIT_TESTS=FAIL
+INTEGRATION_TESTS=FAIL
+AGENTIC_TESTS=FAIL
+
+!!! Validation failed - see specific component failures above

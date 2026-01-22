@@ -31,6 +31,12 @@ class Settings:
     budget_limits: Optional[dict] = None  # Dict of category: limit
     budget_db_path: Path = Path("data/budget.db")
 
+    # Search Settings
+    search_bing_api_key: Optional[str] = None
+    search_tavily_api_key: Optional[str] = None
+    search_google_api_key: Optional[str] = None
+    search_google_cx: Optional[str] = None
+
 def load_settings(env_file: Optional[Path] = None, override_environ: bool = False) -> Settings:
     """Load settings from environment variables and optional env file."""
     if env_file:
@@ -52,5 +58,9 @@ def load_settings(env_file: Optional[Path] = None, override_environ: bool = Fals
         privacy_redaction_level=os.environ.get("PRIVACY_REDACTION_LEVEL", "partial"),
         budget_enforcement_level=os.environ.get("BUDGET_ENFORCEMENT_LEVEL", "log"),
         budget_limits=eval(os.environ.get("BUDGET_LIMITS", "{}")),  # Using eval for simplicity in parsing dict from env
-        budget_db_path=Path(os.environ.get("BUDGET_DB_PATH", "data/budget.db"))
+        budget_db_path=Path(os.environ.get("BUDGET_DB_PATH", "data/budget.db")),
+        search_bing_api_key=os.environ.get("SEARCH_BING_API_KEY"),
+        search_tavily_api_key=os.environ.get("SEARCH_TAVILY_API_KEY"),
+        search_google_api_key=os.environ.get("SEARCH_GOOGLE_API_KEY"),
+        search_google_cx=os.environ.get("SEARCH_GOOGLE_CX")
     )

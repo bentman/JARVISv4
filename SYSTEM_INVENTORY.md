@@ -392,3 +392,15 @@
     8 passed in 0.13s
     ```
   - Notes: Ports v2 Budget Service for granular cost tracking and enforcement. Uses SQLite for persistence with daily reset logic. Supports 'none', 'log', and 'block' enforcement levels.
+
+- **Unified Search Tool**
+  - State: Verified (Audit Date: 2026-01-22)
+  - Location: `backend/tools/web_search.py`, `backend/core/search_providers.py`, `tests/unit/test_web_search.py`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    ✓ PASS: tests.unit.test_web_search::test_web_search_tool_initialization
+    ✓ PASS: tests.unit.test_web_search::test_web_search_privacy_redaction
+    ✓ PASS: tests.unit.test_web_search::test_web_search_budget_block
+    ✓ PASS: tests.unit.test_web_search::test_web_search_provider_fallback
+    ```
+  - Notes: Deterministic Web Search tool with multi-provider support (DuckDuckGo, Bing, Tavily, Google). Features integrated Privacy Redaction (PII scrubbing) and Budget enforcement.

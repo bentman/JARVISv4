@@ -10,6 +10,7 @@ from backend.memory.working_state import WorkingStateManager
 from backend.agents.planner.planner import PlannerAgent, InvalidPlanError
 from backend.agents.executor.executor import ExecutorAgent
 from backend.tools.registry.registry import ToolRegistry
+from backend.tools.web_search import WebSearchTool
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,9 @@ class ECFController:
         # Initialize Agents
         self.planner = PlannerAgent(self.llm, self.state_manager)
         self.executor = ExecutorAgent(self.llm, self.registry)
+        
+        # Register Default Tools
+        self.registry.register_tool(WebSearchTool(self.settings))
         
         logger.info("ECFController initialized and READY.")
 
