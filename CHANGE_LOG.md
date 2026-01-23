@@ -1,8 +1,7 @@
 # CHANGE_LOG.md
 
 ## Instructions
-
-- Append-only history of completed, validated work.
+- Append-only record of reported work; corrections may be appended to entries.
 - Write an entry only after the mini-phase objective is “done” and supported by evidence.
 - No edits/reorders/deletes of past entries. If an entry is wrong, append a corrective entry.
 - Each entry must include:

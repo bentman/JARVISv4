@@ -1,7 +1,7 @@
 # SYSTEM_INVENTORY.md
+Entries represent reported validations at a point in time and may require re-validation. Treat evidence blocks as claims unless reproduced.
 
 ## Instructions
-
 - This document is a status snapshot of what exists and is validated now. It is not a roadmap.
 - Additive updates only. Do not rewrite history. If a prior entry is wrong, append a correction with date + evidence pointer.
 - Promote a capability only when supported by validation evidence (tests, harness runs, or reproducible runtime checks).
@@ -14,7 +14,6 @@
   - Notes (optional, 1–2 lines)
 
 ## States
-
 - Planned: intent only, not implemented
 - Implemented: code exists, not yet validated end-to-end
 - Verified: validated with evidence (command + excerpt)

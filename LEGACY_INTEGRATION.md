@@ -53,7 +53,7 @@ These modules require refactoring to align with the ECF architecture.
 ## 4. Infrastructure & Configuration Strategy
 
 ### 4.1 Deployment (The v3 Model)
-JARVISv4 will adopt the `./reference/JARVISv3_ref/` **Docker architecture** for its superior development and production workflows.
+JARVISv4 will adopt the `./reference/JARVISv3_ref/` **Docker architecture** for its superior development and production workflows. This is a phased migration target; compose services may be reserved and partial until the corresponding phase is executed.
 *   **Services:** Backend (API), Redis (Cache), Frontend (Vite/Tauri), and Nginx (Proxy).
 *   **Validation Service:** Retain the v3 pattern of a dedicated `validate` service in `./reference/JARVISv3_ref/docker-compose.dev.yml` to run integration tests on startup.
 

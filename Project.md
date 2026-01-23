@@ -1,7 +1,7 @@
 # Project.md: Local-First Explicit Cognition Framework (ECF)
 
 > **Source of Truth**
-> This document is the authoritative project plan for the Local-First Agent System. It synthesizes the architectural principles of the Explicit Cognition Framework (ECF) with a concrete implementation strategy.
+> This document is the authoritative project plan for the Local-First Agent System. It synthesizes the architectural principles of the Explicit Cognition Framework (ECF) with a concrete implementation strategy. This document describes the target architecture and invariants. The presence of paths in the repo tree indicates intended structure, not necessarily completed implementation. Current validated capabilities are tracked separately (see SYSTEM_INVENTORY.md), and development scaffolding (e.g., reserved Docker services, pending UI migration) is expected.
 
 ---
 
@@ -26,6 +26,8 @@ The project follows a strict directory structure to enforce separation of concer
 repo/
 ├── .env.example                # Prod config template (v2-style safety)
 ├── .env.dev.example            # Dev config template (v2-style relaxed)
+│   # Docker Compose files may include reserved services during phased migration
+│   # These are not expected to be fully runnable until the migration milestone.
 ├── docker-compose.yml          # Production stack (v3 model)
 ├── docker-compose.dev.yml      # Dev stack with validation service (v3 model)
 ├── Project.md                  # Source of Truth
@@ -59,8 +61,10 @@ repo/
 │   │   └── sandbox/            # Execution Environment
 │   ├── artifacts/              # Data Schemas & Templates
 │   └── datasets/               # Learning Pipeline Data
-├── frontend/                   # React/Tauri UI (v3 stack)
-│   └── Dockerfile              # Frontend build definition
+│   # Planned UI workspace; may be empty until UI migration phase
+├── frontend/                   # React/Tauri UI (v3 stack) 
+│   │   # Added when UI containerization is migrated
+│   └── Dockerfile              # Frontend build definition 
 ├── tests/                      # Validation Suite (v3 structure)
 │   ├── unit/                   # Component-level tests
 │   ├── integration/            # Service-level tests
@@ -79,7 +83,7 @@ repo/
 The memory system replaces the context window as the source of truth.
 
 *   **Tier 1: Working State (Ephemeral)**
-    *   **Storage:** YAML files on disk.
+    *   **Storage:** JSON or YAML files on disk (currently JSON in v4 implementation).
     *   **Schema:** `task_id`, `goal`, `status`, `current_step`, `completed_steps`, `next_steps`.
     *   **Lifecycle:** Created at task start, archived upon completion.
 *   **Tier 2: Episodic Trace (Immutable)**
@@ -131,7 +135,7 @@ Improvement is explicit and weight-based.
 
 ## 4. Implementation Plan
 
-### Phase 1: Foundation (Weeks 1-4)
+### Phase 1: Foundation
 **Goal:** Functional Controller & Memory System.
 - [ ] **Repo Setup:** Directory structure, Docker environment.
 - [ ] **Memory:** Implement `WorkingStateManager`, `EpisodicMemory` (SQLite), `SemanticMemory` (FAISS).
@@ -139,21 +143,21 @@ Improvement is explicit and weight-based.
 - [ ] **Artifacts:** Define `task.json`, `plan.json`, `decision_log.json` schemas.
 - [ ] **Validation:** System can execute a linear "Hello World" workflow deterministically.
 
-### Phase 2: Agents & Tools (Weeks 5-8)
+### Phase 2: Agents & Tools
 **Goal:** Specialized Roles & Deterministic Execution.
 - [ ] **Agents:** Implement `Planner`, `Executor`, `Critic` shells and prompts.
 - [ ] **Tools:** Build Sandbox Executor and Tool Registry.
 - [ ] **Communication:** Implement structured message passing (no conversational loops).
 - [ ] **Validation:** System can plan and execute a multi-step task with tool calls.
 
-### Phase 3: Learning Loop (Weeks 9-12)
+### Phase 3: Learning Loop
 **Goal:** Self-Improvement Pipeline.
 - [ ] **Curator:** Implement `EpisodeCapture` and `QualityFilter`.
 - [ ] **Learner:** Set up Unsloth training pipeline.
 - [ ] **Regression:** Build `RegressionSuite` and `BasalDatasetManager`.
 - [ ] **Validation:** Complete one full cycle: Task → Log → Dataset → Adapter → Deployed Improvement.
 
-### Phase 4: Production & Operations (Weeks 13-16)
+### Phase 4: Production & Operations
 **Goal:** Deployment & Observability.
 - [ ] **Ops:** Docker Compose stack (Controller, vLLM, VectorDB, Grafana).
 - [ ] **UI:** Operator Control Panel (Task submission, History, Replay).
