@@ -136,7 +136,7 @@ Improvement is explicit and weight-based.
 - [ ] **Repo Setup:** Directory structure, Docker environment.
 - [ ] **Memory:** Implement `WorkingStateManager`, `EpisodicMemory` (SQLite), `SemanticMemory` (FAISS).
 - [ ] **Controller:** Implement base FSM engine and Context Builder.
-- [ ] **Artifacts:** Define `task.yaml`, `plan.yaml`, `decision_log.json` schemas.
+- [ ] **Artifacts:** Define `task.json`, `plan.json`, `decision_log.json` schemas.
 - [ ] **Validation:** System can execute a linear "Hello World" workflow deterministically.
 
 ### Phase 2: Agents & Tools (Weeks 5-8)

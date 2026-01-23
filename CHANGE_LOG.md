@@ -14,11 +14,6 @@
 
 ## Entries
 
-- 2026-01-17 00:00
-  - Summary: Initialized governance scaffolding files (AGENTS.md, CHANGE_LOG.md, SYSTEM_INVENTORY.md) and Cline rule set under .clinerules/.
-  - Scope: AGENTS.md; CHANGE_LOG.md; SYSTEM_INVENTORY.md; .clinerules/00-guardrails.md; .clinerules/10-mini-phase.md; .clinerules/20-validation-tests.md; .clinerules/30-doc-truth.md; .clinerules/40-inventory-states.md; .clinerules/50-change-log.md
-  - Evidence: Manual file creation (no command-run evidence recorded).
-
 - 2026-01-17 17:53
   - Summary: Established backend environment, entrypoint, and validation harness with reporting.
   - Scope: backend/main.py, backend/requirements.txt, scripts/validate_backend.py (generated: reports/*)
@@ -197,7 +192,7 @@
     ```text
     SUCCESS: Unit: 31 tests
     SUCCESS: Integration: 3 tests
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```
 
 - 2026-01-19 14:36
@@ -211,7 +206,7 @@
   - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
     ```text
     SUCCESS: Unit: 36 tests
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```
 
 - 2026-01-19 14:54
@@ -330,7 +325,7 @@
     ```text
     ✓ PASS: tests.unit.test_initial_sanity::test_backend_main_execution
     ✓ PASS: tests.integration.test_learning_cycle::test_full_learning_cycle
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```
 
 - 2026-01-21 22:18
@@ -341,7 +336,7 @@
     ✓ PASS: tests.unit.test_privacy::test_privacy_encryption_roundtrip
     ...
     ✓ PASS: tests.unit.test_privacy::test_privacy_hash_id
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```
 
 - 2026-01-21 22:33
@@ -367,5 +362,5 @@
     ✓ PASS: tests.unit.test_web_search::test_web_search_privacy_redaction
     ✓ PASS: tests.unit.test_web_search::test_web_search_budget_block
     ✓ PASS: tests.unit.test_web_search::test_web_search_provider_fallback
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```

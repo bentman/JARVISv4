@@ -267,9 +267,9 @@ def main():
 
     if not has_any_fail:
         if has_any_skips:
-            logger.log("\n✅ JARVISv4 Backend is VALIDATED WITH EXPECTED SKIPS!")
+            logger.log("\n✅ JARVISv4 Current ./backend is VALIDATED WITH EXPECTED SKIPS!")
         else:
-            logger.log("\n✅ JARVISv4 Backend is FULLY validated!")
+            logger.log("\n✅ JARVISv4 Current ./backend is validated!")
         status = 0
     else:
         logger.log("\n!!! Validation failed - see specific component failures above")

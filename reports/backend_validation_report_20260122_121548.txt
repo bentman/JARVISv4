@@ -1,11 +1,19 @@
-JARVISv4 Backend Validation Session started at 2026-01-21T22:17:56.690445
-Report File: reports\backend_validation_report_20260121_221756.txt
+JARVISv4 Backend Validation Session started at 2026-01-22T12:15:48.506293
+Report File: reports\backend_validation_report_20260122_121548.txt
 ============================================================
 SUCCESS: Using Python interpreter: backend\.venv\Scripts\python.exe (Python 3.12.10)
 
 ============================================================
 UNIT TESTS
 ============================================================
+  ✓ PASS: tests.unit.test_budget::test_budget_initialization
+  ✓ PASS: tests.unit.test_budget::test_record_spend
+  ✓ PASS: tests.unit.test_budget::test_check_availability_within_limit
+  ✓ PASS: tests.unit.test_budget::test_check_availability_exceeds_limit_block
+  ✓ PASS: tests.unit.test_budget::test_check_availability_exceeds_limit_log
+  ✓ PASS: tests.unit.test_budget::test_check_availability_none_level
+  ✓ PASS: tests.unit.test_budget::test_get_status_multiple_categories
+  ✓ PASS: tests.unit.test_budget::test_persistence
   ✓ PASS: tests.unit.test_config::test_default_settings
   ✓ PASS: tests.unit.test_config::test_env_override
   ✓ PASS: tests.unit.test_config_env::test_load_from_env_file
@@ -53,8 +61,18 @@ UNIT TESTS
   ✓ PASS: tests.unit.test_privacy::test_privacy_hash_id
   ✓ PASS: tests.unit.test_regression::test_regression_suite_end_to_end
   ✓ PASS: tests.unit.test_regression::test_regression_mining_only
+  ✓ PASS: tests.unit.test_semantic_memory::test_semantic_memory_init
+  ✓ PASS: tests.unit.test_semantic_memory::test_add_pattern
+  ✓ PASS: tests.unit.test_semantic_memory::test_retrieve_similar
+  ✓ PASS: tests.unit.test_semantic_memory::test_retrieve_with_domain_filter
+  ✓ PASS: tests.unit.test_semantic_memory::test_persistence
+  ✓ PASS: tests.unit.test_semantic_memory::test_guardrails
   ✓ PASS: tests.unit.test_tool_registry::test_tool_registration_and_invocation
   ✓ PASS: tests.unit.test_tool_registry::test_list_tools_initially_empty
+  ✓ PASS: tests.unit.test_web_search::test_web_search_tool_initialization
+  ✓ PASS: tests.unit.test_web_search::test_web_search_privacy_redaction
+  ✓ PASS: tests.unit.test_web_search::test_web_search_budget_block
+  ✓ PASS: tests.unit.test_web_search::test_web_search_provider_fallback
   ✓ PASS: tests.unit.test_workflow_execution::test_multi_node_workflow_execution
   ✓ PASS: tests.unit.test_workflow_execution::test_workflow_error_handling
   ✓ PASS: tests.unit.test_working_state::test_create_task
@@ -65,7 +83,7 @@ UNIT TESTS
   ✓ PASS: tests.unit.test_working_state::test_validation_failure
   ✓ PASS: tests.unit.test_working_state::test_persistence_between_instances
   ✓ PASS: tests.unit.test_working_state::test_config_integration
-SUCCESS: Unit: 59 tests
+SUCCESS: Unit: 77 tests
 
 ============================================================
 INTEGRATION TESTS

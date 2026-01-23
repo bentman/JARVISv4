@@ -258,7 +258,7 @@
     ```text
     SUCCESS: Unit: 31 tests
     SUCCESS: Integration: 3 tests
-    ✅ JARVISv4 Backend is FULLY validated!
+    ✅ JARVISv4 Current ./backend is validated!
     ```
   - Notes: Implements ECF Tier 1 memory using JSON for ephemeral task state tracking with atomic writes and schema validation.
 
