@@ -13,6 +13,14 @@
 
 ## Entries
 
+- 2026-01-24 12:24
+  - Summary: Added a read-only task supervision surface to enumerate ACTIVE and ARCHIVED tasks deterministically from disk.
+  - Scope: `backend/memory/working_state.py`, `backend/core/controller.py`, `backend/main.py`, `tests/agentic/test_task_supervision_list_tasks.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_task_supervision_list_tasks.py -q`
+    ```text
+    1 passed in 1.50s
+    ```
+
 - 2026-01-24 11:49
   - Summary: Added deterministic task resume from on-disk artifacts via controller resume_task and a CLI entrypoint.
   - Scope: `backend/memory/working_state.py`, `backend/core/controller.py`, `backend/main.py`, `tests/agentic/test_task_resume.py`

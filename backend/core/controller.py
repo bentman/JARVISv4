@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import json
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pathlib import Path
@@ -56,6 +57,50 @@ class ECFController:
         self.registry.register_tool(WebSearchTool(self.settings))
         
         logger.info("ECFController initialized and READY.")
+
+    def list_task_summaries(self) -> List[Dict[str, Any]]:
+        """Read-only enumeration of task summaries from disk."""
+        summaries: List[Dict[str, Any]] = []
+
+        active_ids = self.state_manager.list_active_task_ids()
+        for task_id in active_ids:
+            try:
+                state = self.state_manager.load_task(task_id)
+            except Exception as exc:
+                logger.warning(f"Skipping task {task_id}: {exc}")
+                continue
+            summaries.append({
+                "task_id": task_id,
+                "lifecycle": "ACTIVE",
+                "status": state.get("status"),
+                "completed_steps": len(state.get("completed_steps", [])),
+                "next_steps": len(state.get("next_steps", [])),
+                "has_current_step": bool(state.get("current_step")),
+                "source_path": str(self.settings.working_storage_path / f"{task_id}.json")
+            })
+
+        for archived_path in self.state_manager.list_archived_task_paths():
+            try:
+                state = json.loads(archived_path.read_text())
+            except Exception as exc:
+                logger.warning(f"Skipping archived task {archived_path}: {exc}")
+                continue
+            task_id = state.get("task_id", archived_path.stem)
+            summaries.append({
+                "task_id": task_id,
+                "lifecycle": "ARCHIVED",
+                "status": state.get("status"),
+                "completed_steps": len(state.get("completed_steps", [])),
+                "next_steps": len(state.get("next_steps", [])),
+                "has_current_step": bool(state.get("current_step")),
+                "source_path": str(archived_path)
+            })
+
+        def _sort_key(item: Dict[str, Any]) -> tuple:
+            lifecycle_rank = 0 if item.get("lifecycle") == "ACTIVE" else 1
+            return (lifecycle_rank, item.get("task_id", ""))
+
+        return sorted(summaries, key=_sort_key)
 
     async def _execute_remaining_steps(self, task_id: str, goal: str, max_steps: Optional[int] = None) -> int:
         """Execute remaining steps for an existing task state."""

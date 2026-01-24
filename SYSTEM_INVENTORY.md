@@ -503,6 +503,15 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Resumes an existing task_id by continuing remaining `next_steps` from the on-disk task JSON; fails fast if `current_step` is non-null; does not imply safe handling of in-flight step side effects.
 
+- **Task Supervision Surface (List Tasks: ACTIVE + ARCHIVED)**
+  - State: Verified
+  - Location: `backend/memory/working_state.py`, `backend/core/controller.py`, `backend/main.py`, `tests/agentic/test_task_supervision_list_tasks.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_task_supervision_list_tasks.py -q`
+    ```text
+    1 passed in 1.50s
+    ```
+  - Notes: Read-only listing enumerates task JSON artifacts from `tasks/` (ACTIVE) and `tasks/archive/**` (ARCHIVED) and reports deterministic ordering (ACTIVE first, then task_id ascending).
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23

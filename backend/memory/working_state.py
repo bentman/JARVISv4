@@ -34,6 +34,12 @@ class WorkingStateManager:
             task_ids.append(task_file.stem)
         return sorted(task_ids)
 
+    def list_archived_task_paths(self) -> List[Path]:
+        """List archived task files stored under the archive directory."""
+        if not self.archive_path.exists():
+            return []
+        return sorted(self.archive_path.glob("**/*.json"))
+
     def list_incomplete_task_ids(self) -> List[str]:
         """List task IDs that are not completed or failed."""
         incomplete: List[str] = []

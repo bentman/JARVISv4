@@ -40,10 +40,31 @@ async def run_resume(task_id: str):
     print(f"Final State: {controller.state.value}")
     print(f"-------------------------\n")
 
+
+async def run_list_tasks(settings) -> int:
+    """Print deterministic task summaries (read-only)."""
+    from backend.core.controller import ECFController
+
+    controller = ECFController(settings=settings)
+    summaries = controller.list_task_summaries()
+    for summary in summaries:
+        print(
+            "TASK "
+            f"task_id={summary.get('task_id')} "
+            f"lifecycle={summary.get('lifecycle')} "
+            f"status={summary.get('status')} "
+            f"completed_steps={summary.get('completed_steps')} "
+            f"next_steps={summary.get('next_steps')} "
+            f"has_current_step={summary.get('has_current_step')}"
+        )
+    await controller.llm.close()
+    return len(summaries)
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="JARVISv4 ECF CLI")
     parser.add_argument("--goal", type=str, help="The high-level goal to execute")
     parser.add_argument("--resume-task-id", type=str, help="Resume an existing task by ID")
+    parser.add_argument("--list-tasks", action="store_true", help="List tasks from disk (read-only)")
     parser.add_argument("--env-file", type=str, help="Path to .env file to load")
     parser.add_argument("--llm-base-url", type=str, help="Override LLM base URL")
     parser.add_argument("--llm-model", type=str, help="Override LLM model")
@@ -146,15 +167,20 @@ def main():
         print("Hint: ensure required dependencies are installed (use backend/.venv).")
         sys.exit(2)
 
-    config_error = _validate_llm_config(settings)
-    if config_error:
-        print(config_error)
-        sys.exit(2)
-
     try:
         if args.check_llm:
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
             sys.exit(0 if ok else 2)
+
+        if args.list_tasks:
+            count = asyncio.run(run_list_tasks(settings))
+            print(f"TASK_SUMMARY_COUNT={count}")
+            sys.exit(0)
+
+        config_error = _validate_llm_config(settings)
+        if config_error:
+            print(config_error)
+            sys.exit(2)
 
         if args.resume_task_id:
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
