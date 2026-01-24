@@ -13,6 +13,23 @@
 
 ## Entries
 
+- 2026-01-24 09:40
+  - Summary: Hardened API task response contract to always return a durable task_id and explicit error field on failure.
+  - Scope: `backend/api/app.py`, `backend/api/models.py`, `backend/core/controller.py`
+  - Evidence: `backend/.venv/Scripts/python -m uvicorn backend.api.app:app --port 8000` + `curl.exe -s -X POST http://127.0.0.1:8000/v1/tasks -H "Content-Type: application/json" -d '{"goal":"ping"}'`
+    ```text
+    {"task_id":"task_...","state":"FAILED","error":"LLMProviderError: ... Connection error."}
+    ```
+
+- 2026-01-24 09:00
+  - Summary: Added Redis-backed cache integration for WebSearchTool with settings wiring and cache client module; validated cache usage via unit test.
+  - Scope: `backend/core/config/settings.py`, `backend/core/cache/`, `backend/tools/web_search.py`, `backend/requirements.txt`, `tests/unit/test_web_search.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_web_search.py -q`
+    ```text
+    ....                                                                             [100%]
+    5 passed in 0.36s
+    ```
+
 - 2026-01-24 07:51
   - Summary: Added append-only Tier-2 episodic trace storage and controller emissions for decisions, tool calls, and validations; asserted trace rows in controller unit test.
   - Scope: `backend/memory/stores/trace_store.py`, `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`

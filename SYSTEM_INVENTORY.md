@@ -21,6 +21,25 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **API Task Response Contract (POST /v1/tasks)**
+  - State: Verified
+  - Location: `backend/api/app.py`, `backend/api/models.py`, `backend/core/controller.py`
+  - Validation: `backend/.venv/Scripts/python -m uvicorn backend.api.app:app --port 8000` + `curl.exe -s -X POST http://127.0.0.1:8000/v1/tasks -H "Content-Type: application/json" -d '{"goal":"ping"}'`
+    ```text
+    {"task_id":"task_...","state":"FAILED","error":"LLMProviderError: ... Connection error."}
+    ```
+  - Notes: Failure responses preserve a durable task_id and include an explicit error field; this does not imply LLM connectivity success.
+
+- **Redis Cache Integration (WebSearchTool)**
+  - State: Verified
+  - Location: `backend/core/cache/redis_cache.py`, `backend/core/config/settings.py`, `backend/tools/web_search.py`, `tests/unit/test_web_search.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_web_search.py -q`
+    ```text
+    ....                                                                             [100%]
+    5 passed in 0.36s
+    ```
+  - Notes: Web search results are cached via Redis when `REDIS_URL` is configured; unit tests assert cache hit behavior without Docker.
+
 - **Tier-2 Episodic Trace (Append-Only)**
   - State: Verified
   - Location: `backend/memory/stores/trace_store.py`, `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`

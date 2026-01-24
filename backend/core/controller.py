@@ -33,6 +33,7 @@ class ECFController:
     def __init__(self, settings: Optional[Settings] = None):
         self.settings = settings or load_settings()
         self.state = ControllerState.INITIALIZING
+        self.last_error: Optional[str] = None
         
         # Initialize Infrastructure
         self.registry = ToolRegistry()
@@ -64,14 +65,26 @@ class ECFController:
             task_id: The ID of the processed task.
         """
         task_id: Optional[str] = None
+        self.last_error = None
         
         try:
             # PHASE 1: PLANNING
             self.state = ControllerState.PLANNING
             logger.info(f"Transitioning to {self.state.value} for goal: {goal}")
+
+            if task_id is None:
+                task_id = self.state_manager.create_task({
+                    "goal": goal,
+                    "domain": "general",
+                    "constraints": [],
+                    "next_steps": []
+                })
             
             try:
-                task_id = await self.planner.generate_plan(goal)
+                plan_task_id = await self.planner.generate_plan(goal)
+                if plan_task_id != task_id:
+                    logger.warning("Planner task_id differed from pre-created task; using planner task_id")
+                    task_id = plan_task_id
                 self.trace_store.append_decision(
                     task_id,
                     "plan_accepted",
@@ -86,11 +99,7 @@ class ECFController:
             except InvalidPlanError as e:
                 logger.error(f"Planning failed: {str(e)}")
                 self.state = ControllerState.FAILED
-                task_id = self.state_manager.create_task({
-                    "goal": goal,
-                    "domain": "general",
-                    "constraints": []
-                })
+                self.last_error = str(e)
                 self.trace_store.append_decision(
                     task_id,
                     "plan_rejected",
@@ -104,7 +113,7 @@ class ECFController:
                 )
                 self.state_manager.update_task(task_id, {"status": "FAILED"})
                 self.state_manager.archive_task(task_id, reason="failed_plan")
-                return "FAILED_PLAN" # Or handle better if we had a task_id already
+                return task_id
             
             # PHASE 2: EXECUTING
             self.state = ControllerState.EXECUTING
@@ -167,6 +176,7 @@ class ECFController:
                 
                 if outcome["status"] == "FAILED":
                     logger.error(f"Step {step_index} failed: {outcome.get('error')}")
+                    self.last_error = outcome.get("error") or "Step execution failed"
                     self.state_manager.update_task(task_id, {"status": "FAILED"})
                     self.state_manager.archive_task(task_id, reason="failed_execute")
                     self.state = ControllerState.FAILED
@@ -198,14 +208,21 @@ class ECFController:
         except Exception as e:
             logger.exception(f"Unexpected controller error: {str(e)}")
             self.state = ControllerState.FAILED
-            if task_id:
-                self.trace_store.append_decision(
-                    task_id,
-                    "controller_error",
-                    {"error": str(e)}
-                )
-                self.state_manager.update_task(task_id, {"status": "FAILED"})
-                self.state_manager.archive_task(task_id, reason="error")
-            return task_id or "ERROR"
+            self.last_error = f"{type(e).__name__}: {e}"
+            if task_id is None:
+                task_id = self.state_manager.create_task({
+                    "goal": goal,
+                    "domain": "general",
+                    "constraints": [],
+                    "next_steps": []
+                })
+            self.trace_store.append_decision(
+                task_id,
+                "controller_error",
+                {"error": str(e)}
+            )
+            self.state_manager.update_task(task_id, {"status": "FAILED"})
+            self.state_manager.archive_task(task_id, reason="error")
+            return task_id
         finally:
             await self.llm.close()
