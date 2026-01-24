@@ -13,6 +13,14 @@
 
 ## Entries
 
+- 2026-01-24 11:03
+  - Summary: Added injectable-client support to RedisCache and validated JSON round-trip behavior with a fake Redis boundary client.
+  - Scope: `backend/core/cache/redis_cache.py`, `tests/unit/test_redis_cache.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_redis_cache.py -q`
+    ```text
+    1 passed in 0.08s
+    ```
+
 - 2026-01-24 10:34
   - Summary: Added API smoke probe to validate backend API readiness (health + metrics) and aligned controller planning-failure test with durable task_id contract.
   - Scope: `scripts/validate_backend.py`, `tests/unit/test_ecf_controller.py`

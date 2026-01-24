@@ -485,6 +485,15 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Validates API process starts/responds to /healthz and /metrics; does not imply production readiness.
 
+- **RedisCache (Injectable Client Boundary + JSON Round-Trip)**
+  - State: Verified
+  - Location: `backend/core/cache/redis_cache.py`, `tests/unit/test_redis_cache.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_redis_cache.py -q`
+    ```text
+    1 passed in 0.08s
+    ```
+  - Notes: Verifies RedisCache JSON serialization and get/setex interaction via an injected fake client; does not validate live Redis connectivity.
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23

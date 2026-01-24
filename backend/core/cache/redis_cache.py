@@ -3,18 +3,31 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any, Optional, Protocol
 
 import redis
+
+
+class KeyValueClient(Protocol):
+    def get(self, key: str) -> Optional[str]:
+        ...
+
+    def setex(self, key: str, ttl_seconds: int, value: str) -> None:
+        ...
 
 
 class RedisCache:
     """Minimal Redis-backed cache for JSON-serializable payloads."""
 
-    def __init__(self, redis_url: str, default_ttl_seconds: int = 300):
+    def __init__(
+        self,
+        redis_url: str,
+        default_ttl_seconds: int = 300,
+        client: Optional[KeyValueClient] = None,
+    ):
         self.redis_url = redis_url
         self.default_ttl_seconds = default_ttl_seconds
-        self.client = redis.Redis.from_url(redis_url, decode_responses=True)
+        self.client = client or redis.Redis.from_url(redis_url, decode_responses=True)
 
     def get_json(self, key: str) -> Optional[Any]:
         value = self.client.get(key)
