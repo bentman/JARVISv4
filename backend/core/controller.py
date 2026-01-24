@@ -31,18 +31,28 @@ class ECFController:
     Coordinates between State, Planner, and Executor.
     """
     
-    def __init__(self, settings: Optional[Settings] = None):
+    def __init__(
+        self,
+        settings: Optional[Settings] = None,
+        llm_timeout_seconds: Optional[float] = None,
+        llm_max_retries: Optional[int] = None
+    ):
         self.settings = settings or load_settings()
         self.state = ControllerState.INITIALIZING
         self.last_error: Optional[str] = None
         
         # Initialize Infrastructure
         self.registry = ToolRegistry()
-        self.llm = OpenAIProvider(
-            model=self.settings.llm_model,
-            api_key=self.settings.llm_api_key,
-            base_url=self.settings.llm_base_url
-        )
+        provider_kwargs: Dict[str, Any] = {
+            "model": self.settings.llm_model,
+            "api_key": self.settings.llm_api_key,
+            "base_url": self.settings.llm_base_url
+        }
+        if llm_timeout_seconds is not None:
+            provider_kwargs["timeout"] = llm_timeout_seconds
+        if llm_max_retries is not None:
+            provider_kwargs["max_retries"] = llm_max_retries
+        self.llm = OpenAIProvider(**provider_kwargs)
         self.state_manager = WorkingStateManager(
             base_path=self.settings.working_storage_path
         )
@@ -233,10 +243,12 @@ class ECFController:
                 })
             
             try:
-                plan_task_id = await self.planner.generate_plan(goal)
-                if plan_task_id != task_id:
-                    logger.warning("Planner task_id differed from pre-created task; using planner task_id")
-                    task_id = plan_task_id
+                await self.planner.generate_plan(
+                    goal,
+                    constraints=[],
+                    domain="general",
+                    task_id=task_id
+                )
                 self.trace_store.append_decision(
                     task_id,
                     "plan_accepted",

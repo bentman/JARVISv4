@@ -10,10 +10,14 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-async def run_goal(goal: str):
+async def run_goal(goal: str, settings, llm_timeout_seconds: float, llm_max_retries: int):
     """Initialize controller and run the requested goal."""
     from backend.core.controller import ECFController
-    controller = ECFController()
+    controller = ECFController(
+        settings=settings,
+        llm_timeout_seconds=llm_timeout_seconds,
+        llm_max_retries=llm_max_retries
+    )
     print(f"\n--- Starting ECF Task ---")
     print(f"Goal: {goal}")
     print(f"-------------------------\n")
@@ -25,10 +29,14 @@ async def run_goal(goal: str):
     print(f"-------------------------\n")
 
 
-async def run_resume(task_id: str):
+async def run_resume(task_id: str, settings, llm_timeout_seconds: float, llm_max_retries: int):
     """Initialize controller and resume an existing task."""
     from backend.core.controller import ECFController
-    controller = ECFController()
+    controller = ECFController(
+        settings=settings,
+        llm_timeout_seconds=llm_timeout_seconds,
+        llm_max_retries=llm_max_retries
+    )
     print(f"\n--- Resuming ECF Task ---")
     print(f"Task ID: {task_id}")
     print(f"-------------------------\n")
@@ -186,12 +194,22 @@ def main():
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
             if not ok:
                 sys.exit(2)
-            asyncio.run(run_resume(args.resume_task_id))
+            asyncio.run(run_resume(
+                args.resume_task_id,
+                settings,
+                args.llm_timeout_seconds,
+                args.llm_max_retries
+            ))
         elif args.goal:
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
             if not ok:
                 sys.exit(2)
-            asyncio.run(run_goal(args.goal))
+            asyncio.run(run_goal(
+                args.goal,
+                settings,
+                args.llm_timeout_seconds,
+                args.llm_max_retries
+            ))
         else:
             print("JARVISv4 Backend initialized. Use --goal to execute a task.")
             sys.exit(0)

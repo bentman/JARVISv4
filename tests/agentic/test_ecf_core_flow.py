@@ -25,7 +25,7 @@ class IntegrationTemplateTool(BaseTool):
         return {"processed_data": kwargs.get("data"), "status": "INTEGRATION_SUCCESS"}
 
 @pytest.mark.asyncio
-async def test_ecf_first_flight_e2e(tmp_path, monkeypatch):
+async def test_ecf_first_flight_e2e(tmp_path, monkeypatch, caplog):
     # Setup isolated environment for the test
     monkeypatch.setenv("WORKING_STORAGE_PATH", str(tmp_path / "tasks"))
     
@@ -45,6 +45,8 @@ async def test_ecf_first_flight_e2e(tmp_path, monkeypatch):
         "rationale": "Matches the first flight goal"
     }
     
+    caplog.set_level("WARNING")
+
     async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
         controller.llm.client.base_url = "http://mock-llm/v1"
         
@@ -61,6 +63,11 @@ async def test_ecf_first_flight_e2e(tmp_path, monkeypatch):
         # Verify archive
         archive_files = list((tmp_path / "tasks" / "archive").rglob(f"*{task_id}*"))
         assert len(archive_files) == 1
+
+        active_files = list((tmp_path / "tasks").glob("task_*.json"))
+        assert active_files == []
+
+        assert "Planner task_id differed from pre-created task" not in caplog.text
         
         with open(archive_files[0], "r") as f:
             saved_state = json.load(f)

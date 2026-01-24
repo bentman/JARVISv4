@@ -13,6 +13,22 @@
 
 ## Entries
 
+- 2026-01-24 13:15
+  - Summary: Documented deterministic task_id ownership: the Controller is authoritative (no dual task creation); the Planner updates the existing task rather than creating a second task.
+  - Scope: `backend/core/controller.py`, `backend/agents/planner/planner.py`, `tests/agentic/test_ecf_core_flow.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_ecf_core_flow.py::test_ecf_first_flight_e2e -q`
+    ```text
+    1 passed in 1.18s
+    ```
+
+- 2026-01-24 12:55
+  - Summary: Fixed CLI LLM override precedence so resolved `--llm-*` flags override env/defaults and are passed through to the controller LLM provider (base_url/model/timeout/max_retries).
+  - Scope: `backend/main.py`, `backend/core/controller.py`, `tests/unit/test_cli_llm_overrides.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_cli_llm_overrides.py -q`
+    ```text
+    1 passed in 0.60s
+    ```
+
 - 2026-01-24 12:24
   - Summary: Added a read-only task supervision surface to enumerate ACTIVE and ARCHIVED tasks deterministically from disk.
   - Scope: `backend/memory/working_state.py`, `backend/core/controller.py`, `backend/main.py`, `tests/agentic/test_task_supervision_list_tasks.py`

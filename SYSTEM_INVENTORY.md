@@ -512,6 +512,24 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Read-only listing enumerates task JSON artifacts from `tasks/` (ACTIVE) and `tasks/archive/**` (ARCHIVED) and reports deterministic ordering (ACTIVE first, then task_id ascending).
 
+- **Task ID Ownership (Controller-Authoritative; No Dual Task Creation)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `backend/agents/planner/planner.py`, `tests/agentic/test_ecf_core_flow.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_ecf_core_flow.py::test_ecf_first_flight_e2e -q`
+    ```text
+    1 passed in 1.18s
+    ```
+  - Notes: Confirms the Controller owns task_id deterministically; planning updates the existing task artifact rather than creating a second task.
+
+- **CLI LLM Override Precedence (Flags → Controller Provider)**
+  - State: Verified
+  - Location: `backend/main.py`, `backend/core/controller.py`, `tests/unit/test_cli_llm_overrides.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_cli_llm_overrides.py -q`
+    ```text
+    1 passed in 0.60s
+    ```
+  - Notes: Confirms CLI-resolved `llm_base_url`/`llm_model` settings and `--llm-timeout-seconds`/`--llm-max-retries` are forwarded into `OpenAIProvider(...)` used by `ECFController`, including the `max_retries=0` no-retry case.
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23

@@ -45,7 +45,13 @@ class PlannerAgent:
         self.state_manager = state_manager
         self.system_prompt = SYSTEM_PROMPT
 
-    async def generate_plan(self, goal: str, constraints: Optional[List[str]] = None, domain: str = "general") -> str:
+    async def generate_plan(
+        self,
+        goal: str,
+        constraints: Optional[List[str]] = None,
+        domain: str = "general",
+        task_id: Optional[str] = None
+    ) -> str:
         """
         Decomposes a goal into a structured plan and persists it.
         
@@ -69,12 +75,19 @@ class PlannerAgent:
         self._validate_plan(plan)
         
         # Persist to Tier 1 Working State
-        task_id = self.state_manager.create_task({
-            "goal": goal,
-            "domain": domain,
-            "constraints": constraints or [],
-            "next_steps": plan["tasks"]
-        })
+        if task_id is None:
+            task_id = self.state_manager.create_task({
+                "goal": goal,
+                "domain": domain,
+                "constraints": constraints or [],
+                "next_steps": plan["tasks"]
+            })
+        else:
+            self.state_manager.update_task(task_id, {
+                "domain": domain,
+                "constraints": constraints or [],
+                "next_steps": plan["tasks"]
+            })
         
         logger.info(f"Generated plan for goal '{goal}' with task_id {task_id}")
         return task_id
