@@ -13,6 +13,18 @@
 
 ## Entries
 
+- 2026-01-24 10:34
+  - Summary: Added API smoke probe to validate backend API readiness (health + metrics) and aligned controller planning-failure test with durable task_id contract.
+  - Scope: `scripts/validate_backend.py`, `tests/unit/test_ecf_controller.py`
+  - Evidence: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    API_SMOKE_STARTING cmd=python -m uvicorn backend.api.app:app port=8001
+    API_HEALTHZ_OK url=http://127.0.0.1:8001/healthz
+    API_METRICS_OK contains="# HELP jarvis_requests_total"
+    API_SMOKE=PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-24 10:10
   - Summary: Added proxy readiness primitives with a health probe endpoint and optional API base-path routing for the API surface.
   - Scope: `backend/api/app.py`

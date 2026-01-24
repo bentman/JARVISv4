@@ -7,6 +7,8 @@ import sys
 import os
 import subprocess
 import xml.etree.ElementTree as ET
+import time
+import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -233,6 +235,86 @@ def cleanup_old_reports(logger):
         logger.log(f"Report cleanup: Removed {removed_count} reports older than 14 days")
 
 
+def probe_api_endpoints(logger) -> bool:
+    """Start API process and verify /healthz and /metrics respond"""
+    venv_python = get_venv_python_path()
+    api_host = "127.0.0.1"
+    api_port = 8001
+    base_url = f"http://{api_host}:{api_port}"
+    proc = None
+
+    logger.header("API Process Smoke Probe")
+    logger.log(
+        "API_SMOKE_STARTING cmd=python -m uvicorn backend.api.app:app "
+        f"port={api_port}"
+    )
+
+    try:
+        proc = subprocess.Popen(
+            [
+                str(venv_python),
+                "-m",
+                "uvicorn",
+                "backend.api.app:app",
+                "--host",
+                api_host,
+                "--port",
+                str(api_port)
+            ],
+            cwd=Path.cwd(),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            text=True
+        )
+
+        deadline = time.time() + 10
+        healthz_url = f"{base_url}/healthz"
+        healthz_ok = False
+
+        while time.time() < deadline:
+            try:
+                with urllib.request.urlopen(healthz_url, timeout=2) as response:
+                    if response.status == 200:
+                        body = response.read().decode("utf-8")
+                        if "\"status\":\"ok\"" in body:
+                            healthz_ok = True
+                            break
+            except Exception:
+                time.sleep(0.25)
+
+        if not healthz_ok:
+            logger.log(f"API_SMOKE=FAIL reason=healthz_unreachable url={healthz_url}")
+            return False
+
+        logger.log(f"API_HEALTHZ_OK url={healthz_url}")
+
+        metrics_url = f"{base_url}/metrics"
+        try:
+            with urllib.request.urlopen(metrics_url, timeout=2) as response:
+                if response.status != 200:
+                    logger.log(f"API_SMOKE=FAIL reason=metrics_status_{response.status} url={metrics_url}")
+                    return False
+                metrics_body = response.read().decode("utf-8")
+        except Exception as exc:
+            logger.log(f"API_SMOKE=FAIL reason=metrics_error url={metrics_url} error={exc}")
+            return False
+
+        if "# HELP jarvis_requests_total" not in metrics_body:
+            logger.log(f"API_SMOKE=FAIL reason=metrics_missing_header url={metrics_url}")
+            return False
+
+        logger.log("API_METRICS_OK contains=\"# HELP jarvis_requests_total\"")
+        logger.log("API_SMOKE=PASS")
+        return True
+    finally:
+        if proc is not None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+
 def main():
     """Main validation function"""
     logger = ValidationLogger()
@@ -240,6 +322,12 @@ def main():
 
     if not validate_venv(logger):
         logger.log("!!! CRITICAL ERROR: Virtual environment validation failed.")
+        logger.save()
+        return 1
+
+    api_smoke_ok = probe_api_endpoints(logger)
+    if not api_smoke_ok:
+        logger.log("!!! CRITICAL ERROR: API smoke probe failed.")
         logger.save()
         return 1
 

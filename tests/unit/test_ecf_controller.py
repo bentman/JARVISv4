@@ -87,7 +87,7 @@ async def test_controller_planning_failure(controller_settings):
         }))
         
         result = await controller.run_task("Invalid Goal")
-        assert result == "FAILED_PLAN"
+        assert result.startswith("task_")
         assert controller.state == ControllerState.FAILED
         
         archive_dir = controller_settings.working_storage_path / "archive"

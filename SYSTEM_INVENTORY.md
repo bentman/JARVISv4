@@ -472,6 +472,19 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Deterministic Web Search tool with multi-provider support (DuckDuckGo, Bing, Tavily, Google). Features integrated Privacy Redaction (PII scrubbing) and Budget enforcement.
 
+- **Validate Gate (API Smoke Probe)**
+  - State: Verified
+  - Location: `scripts/validate_backend.py`
+  - Validation: `backend/.venv/Scripts/python.exe scripts/validate_backend.py`
+    ```text
+    API_SMOKE_STARTING cmd=python -m uvicorn backend.api.app:app port=8001
+    API_HEALTHZ_OK url=http://127.0.0.1:8001/healthz
+    API_METRICS_OK contains="# HELP jarvis_requests_total"
+    API_SMOKE=PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+  - Notes: Validates API process starts/responds to /healthz and /metrics; does not imply production readiness.
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23
