@@ -13,6 +13,14 @@
 
 ## Entries
 
+- 2026-01-24 11:49
+  - Summary: Added deterministic task resume from on-disk artifacts via controller resume_task and a CLI entrypoint.
+  - Scope: `backend/memory/working_state.py`, `backend/core/controller.py`, `backend/main.py`, `tests/agentic/test_task_resume.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_task_resume.py -q`
+    ```text
+    1 passed in 1.37s
+    ```
+
 - 2026-01-24 11:03
   - Summary: Added injectable-client support to RedisCache and validated JSON round-trip behavior with a fake Redis boundary client.
   - Scope: `backend/core/cache/redis_cache.py`, `tests/unit/test_redis_cache.py`

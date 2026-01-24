@@ -26,6 +26,27 @@ class WorkingStateManager:
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
         self.archive_path = self.base_path / "archive"
+
+    def list_active_task_ids(self) -> List[str]:
+        """List task IDs for non-archived task files."""
+        task_ids: List[str] = []
+        for task_file in self.base_path.glob("task_*.json"):
+            task_ids.append(task_file.stem)
+        return sorted(task_ids)
+
+    def list_incomplete_task_ids(self) -> List[str]:
+        """List task IDs that are not completed or failed."""
+        incomplete: List[str] = []
+        for task_id in self.list_active_task_ids():
+            try:
+                state = self.load_task(task_id)
+            except Exception as exc:
+                logger.warning(f"Skipping task {task_id}: {exc}")
+                continue
+            status = state.get("status")
+            if status not in {"COMPLETED", "FAILED"}:
+                incomplete.append(task_id)
+        return incomplete
     
     def _validate_state(self, state: Dict[str, Any]) -> None:
         """Ensure the state contains all required ECF Tier 1 fields."""

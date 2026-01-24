@@ -17,7 +17,6 @@ async def run_goal(goal: str):
     print(f"\n--- Starting ECF Task ---")
     print(f"Goal: {goal}")
     print(f"-------------------------\n")
-    
     task_id = await controller.run_task(goal)
     
     print(f"\n-------------------------")
@@ -25,9 +24,26 @@ async def run_goal(goal: str):
     print(f"Final State: {controller.state.value}")
     print(f"-------------------------\n")
 
+
+async def run_resume(task_id: str):
+    """Initialize controller and resume an existing task."""
+    from backend.core.controller import ECFController
+    controller = ECFController()
+    print(f"\n--- Resuming ECF Task ---")
+    print(f"Task ID: {task_id}")
+    print(f"-------------------------\n")
+
+    resumed_task_id = await controller.resume_task(task_id)
+
+    print(f"\n-------------------------")
+    print(f"Task Processed: {resumed_task_id}")
+    print(f"Final State: {controller.state.value}")
+    print(f"-------------------------\n")
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="JARVISv4 ECF CLI")
     parser.add_argument("--goal", type=str, help="The high-level goal to execute")
+    parser.add_argument("--resume-task-id", type=str, help="Resume an existing task by ID")
     parser.add_argument("--env-file", type=str, help="Path to .env file to load")
     parser.add_argument("--llm-base-url", type=str, help="Override LLM base URL")
     parser.add_argument("--llm-model", type=str, help="Override LLM model")
@@ -140,7 +156,12 @@ def main():
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
             sys.exit(0 if ok else 2)
 
-        if args.goal:
+        if args.resume_task_id:
+            ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
+            if not ok:
+                sys.exit(2)
+            asyncio.run(run_resume(args.resume_task_id))
+        elif args.goal:
             ok = asyncio.run(_check_llm(settings, args.llm_timeout_seconds, args.llm_max_retries))
             if not ok:
                 sys.exit(2)

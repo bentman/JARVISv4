@@ -494,6 +494,15 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Verifies RedisCache JSON serialization and get/setex interaction via an injected fake client; does not validate live Redis connectivity.
 
+- **Task Resume from Artifacts (Controller + CLI)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `backend/memory/working_state.py`, `backend/main.py`, `tests/agentic/test_task_resume.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_task_resume.py -q`
+    ```text
+    1 passed in 1.37s
+    ```
+  - Notes: Resumes an existing task_id by continuing remaining `next_steps` from the on-disk task JSON; fails fast if `current_step` is non-null; does not imply safe handling of in-flight step side effects.
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23
