@@ -21,6 +21,20 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **CLI LLM Preflight (Ollama / OpenAI-compatible)**
+  - State: Verified
+  - Location: `backend/main.py`
+  - Validation: `backend/.venv/Scripts/python -m backend.main --check-llm --llm-base-url http://localhost:11434/v1 --llm-model llama3.1:8b --llm-timeout-seconds 5 --llm-max-retries 0`
+    ```text
+    LLM_OK base_url=http://localhost:11434/v1 model=llama3.1:8b
+    ```
+  - Validation: `backend/.venv/Scripts/python -m backend.main --check-llm --llm-base-url http://localhost:1/v1 --llm-model llama3.1:8b --llm-timeout-seconds 2 --llm-max-retries 0`
+    ```text
+    LLM_CHECK_FAILED category=unreachable
+    Error: APITimeoutError: Request timed out.
+    ```
+  - Notes: Preflight uses `AsyncOpenAI(max_retries=0)` and `models.list()` for a lightweight connectivity check; failure output includes category and underlying exception type/message.
+
 - **Tool Registry (Contract Hardening)**
   - State: Verified
   - Location: `backend/tools/registry/registry.py`, `tests/unit/test_tool_registry.py`

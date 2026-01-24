@@ -13,6 +13,20 @@
 
 ## Entries
 
+- 2026-01-24 07:10
+  - Summary: Hardened CLI LLM preflight (`--check-llm`) for local Ollama by deferring imports, adding explicit CLI flags, and implementing a no-retry connectivity probe with actionable failure classification.
+  - Scope: `backend/main.py`
+  - Evidence:
+    - `backend/.venv/Scripts/python -m backend.main --check-llm --llm-base-url http://localhost:11434/v1 --llm-model llama3.1:8b --llm-timeout-seconds 5 --llm-max-retries 0`
+      ```text
+      LLM_OK base_url=http://localhost:11434/v1 model=llama3.1:8b
+      ```
+    - `backend/.venv/Scripts/python -m backend.main --check-llm --llm-base-url http://localhost:1/v1 --llm-model llama3.1:8b --llm-timeout-seconds 2 --llm-max-retries 0`
+      ```text
+      LLM_CHECK_FAILED category=unreachable
+      Error: APITimeoutError: Request timed out.
+      ```
+
 - 2026-01-23 20:42
   - Summary: Hardened ToolRegistry tool-call contract with deterministic error types and stable messages for not-found, schema validation, and execution failures.
   - Scope: backend/tools/registry/registry.py, tests/unit/test_tool_registry.py
