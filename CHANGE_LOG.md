@@ -13,6 +13,17 @@
 
 ## Entries
 
+- 2026-01-24 10:10
+  - Summary: Added proxy readiness primitives with a health probe endpoint and optional API base-path routing for the API surface.
+  - Scope: `backend/api/app.py`
+  - Evidence: `backend/.venv/Scripts/python -m uvicorn backend.api.app:app --port 8000` (with `API_PREFIX=/api`) + `curl.exe -s -i http://127.0.0.1:8000/healthz` + `curl.exe -s -i http://127.0.0.1:8000/api/healthz`
+    ```text
+    HTTP/1.1 200 OK
+    {"status":"ok"}
+    HTTP/1.1 200 OK
+    {"status":"ok"}
+    ```
+
 - 2026-01-24 09:40
   - Summary: Hardened API task response contract to always return a durable task_id and explicit error field on failure.
   - Scope: `backend/api/app.py`, `backend/api/models.py`, `backend/core/controller.py`

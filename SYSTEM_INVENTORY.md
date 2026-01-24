@@ -21,6 +21,18 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Proxy Readiness Primitives (Health + API Prefix)**
+  - State: Verified
+  - Location: `backend/api/app.py`
+  - Validation: `backend/.venv/Scripts/python -m uvicorn backend.api.app:app --port 8000` (with `API_PREFIX=/api`) + `curl.exe -s -i http://127.0.0.1:8000/healthz` + `curl.exe -s -i http://127.0.0.1:8000/api/healthz`
+    ```text
+    HTTP/1.1 200 OK
+    {"status":"ok"}
+    HTTP/1.1 200 OK
+    {"status":"ok"}
+    ```
+  - Notes: Provides health probe and optional prefixed routing for proxy setup; does not imply Nginx is implemented.
+
 - **API Task Response Contract (POST /v1/tasks)**
   - State: Verified
   - Location: `backend/api/app.py`, `backend/api/models.py`, `backend/core/controller.py`
