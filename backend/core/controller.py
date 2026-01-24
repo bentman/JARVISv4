@@ -11,6 +11,7 @@ from backend.agents.planner.planner import PlannerAgent, InvalidPlanError
 from backend.agents.executor.executor import ExecutorAgent
 from backend.tools.registry.registry import ToolRegistry
 from backend.tools.web_search import WebSearchTool
+from backend.memory.stores.trace_store import TraceStore
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,8 @@ class ECFController:
         self.state_manager = WorkingStateManager(
             base_path=self.settings.working_storage_path
         )
+        trace_db_path = Path(self.settings.working_storage_path) / "traces.db"
+        self.trace_store = TraceStore(str(trace_db_path))
         
         # Initialize Agents
         self.planner = PlannerAgent(self.llm, self.state_manager)
@@ -69,6 +72,17 @@ class ECFController:
             
             try:
                 task_id = await self.planner.generate_plan(goal)
+                self.trace_store.append_decision(
+                    task_id,
+                    "plan_accepted",
+                    {"goal": goal}
+                )
+                self.trace_store.append_validation(
+                    task_id,
+                    "plan_valid",
+                    "PASS",
+                    {"goal": goal}
+                )
             except InvalidPlanError as e:
                 logger.error(f"Planning failed: {str(e)}")
                 self.state = ControllerState.FAILED
@@ -77,6 +91,17 @@ class ECFController:
                     "domain": "general",
                     "constraints": []
                 })
+                self.trace_store.append_decision(
+                    task_id,
+                    "plan_rejected",
+                    {"error": str(e), "goal": goal}
+                )
+                self.trace_store.append_validation(
+                    task_id,
+                    "plan_valid",
+                    "FAIL",
+                    {"error": str(e), "goal": goal}
+                )
                 self.state_manager.update_task(task_id, {"status": "FAILED"})
                 self.state_manager.archive_task(task_id, reason="failed_plan")
                 return "FAILED_PLAN" # Or handle better if we had a task_id already
@@ -109,11 +134,35 @@ class ECFController:
                 })
                 
                 logger.info(f"Executing Step {step_index}: {current_step['description']}")
+                self.trace_store.append_decision(
+                    task_id,
+                    "step_started",
+                    {"step_index": step_index, "description": current_step["description"]}
+                )
                 
                 # Execute
                 outcome = await self.executor.execute_step(
                     current_step["description"],
                     context={"task_id": task_id, "goal": goal}
+                )
+                self.trace_store.append_tool_call(
+                    task_id=task_id,
+                    step_index=step_index,
+                    tool_name=outcome.get("tool"),
+                    params=outcome.get("params", {}),
+                    status=outcome.get("status", "FAILED"),
+                    result=str(outcome.get("result")) if outcome.get("result") is not None else None,
+                    error=outcome.get("error")
+                )
+                self.trace_store.append_validation(
+                    task_id,
+                    "step_execution",
+                    "PASS" if outcome.get("status") == "SUCCESS" else "FAIL",
+                    {
+                        "step_index": step_index,
+                        "tool": outcome.get("tool"),
+                        "error": outcome.get("error")
+                    }
                 )
                 
                 if outcome["status"] == "FAILED":
@@ -150,6 +199,11 @@ class ECFController:
             logger.exception(f"Unexpected controller error: {str(e)}")
             self.state = ControllerState.FAILED
             if task_id:
+                self.trace_store.append_decision(
+                    task_id,
+                    "controller_error",
+                    {"error": str(e)}
+                )
                 self.state_manager.update_task(task_id, {"status": "FAILED"})
                 self.state_manager.archive_task(task_id, reason="error")
             return task_id or "ERROR"

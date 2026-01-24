@@ -13,6 +13,15 @@
 
 ## Entries
 
+- 2026-01-24 07:51
+  - Summary: Added append-only Tier-2 episodic trace storage and controller emissions for decisions, tool calls, and validations; asserted trace rows in controller unit test.
+  - Scope: `backend/memory/stores/trace_store.py`, `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py -q`
+    ```text
+    .                                                                              [100%]
+    4 passed in 2.02s
+    ```
+
 - 2026-01-24 07:10
   - Summary: Hardened CLI LLM preflight (`--check-llm`) for local Ollama by deferring imports, adding explicit CLI flags, and implementing a no-retry connectivity probe with actionable failure classification.
   - Scope: `backend/main.py`

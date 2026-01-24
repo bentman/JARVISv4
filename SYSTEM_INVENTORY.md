@@ -21,6 +21,16 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Tier-2 Episodic Trace (Append-Only)**
+  - State: Verified
+  - Location: `backend/memory/stores/trace_store.py`, `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py -q`
+    ```text
+    .                                                                              [100%]
+    4 passed in 2.02s
+    ```
+  - Notes: Controller emits decision/tool/validation trace rows into SQLite (append-only) during standard task execution.
+
 - **CLI LLM Preflight (Ollama / OpenAI-compatible)**
   - State: Verified
   - Location: `backend/main.py`

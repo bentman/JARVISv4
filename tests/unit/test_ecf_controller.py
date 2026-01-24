@@ -1,6 +1,7 @@
 import pytest
 import json
 import respx
+import sqlite3
 from httpx import Response
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -65,6 +66,16 @@ async def test_controller_full_lifecycle(controller_settings):
         # Verify file archived
         archive_dir = controller_settings.working_storage_path / "archive"
         assert archive_dir.exists()
+
+        trace_db_path = controller_settings.working_storage_path / "traces.db"
+        with sqlite3.connect(trace_db_path) as conn:
+            decision_count = conn.execute("SELECT COUNT(*) FROM trace_decisions").fetchone()[0]
+            tool_call_count = conn.execute("SELECT COUNT(*) FROM trace_tool_calls").fetchone()[0]
+            validation_count = conn.execute("SELECT COUNT(*) FROM trace_validations").fetchone()[0]
+
+        assert decision_count >= 1
+        assert tool_call_count >= 1
+        assert validation_count >= 1
 
 @pytest.mark.asyncio
 async def test_controller_planning_failure(controller_settings):
