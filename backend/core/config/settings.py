@@ -36,6 +36,7 @@ class Settings:
     search_tavily_api_key: Optional[str] = None
     search_google_api_key: Optional[str] = None
     search_google_cx: Optional[str] = None
+    redis_url: Optional[str] = None
 
 def load_settings(env_file: Optional[Path] = None, override_environ: bool = False) -> Settings:
     """Load settings from environment variables and optional env file."""
@@ -62,5 +63,6 @@ def load_settings(env_file: Optional[Path] = None, override_environ: bool = Fals
         search_bing_api_key=os.environ.get("SEARCH_BING_API_KEY"),
         search_tavily_api_key=os.environ.get("SEARCH_TAVILY_API_KEY"),
         search_google_api_key=os.environ.get("SEARCH_GOOGLE_API_KEY"),
-        search_google_cx=os.environ.get("SEARCH_GOOGLE_CX")
+        search_google_cx=os.environ.get("SEARCH_GOOGLE_CX"),
+        redis_url=os.environ.get("REDIS_URL")
     )

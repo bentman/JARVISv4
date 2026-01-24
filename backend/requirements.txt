@@ -11,3 +11,4 @@ cryptography>=44.0.0
 sentence-transformers>=2.2.2
 ddgs>=9.10.0
 respx>=0.22.0
+redis>=5.0.0

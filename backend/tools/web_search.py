@@ -7,6 +7,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 from backend.tools.base import BaseTool, ToolDefinition
+from backend.core.cache import RedisCache
 from backend.core.search_providers import (
     WebSearchProvider, 
     DuckDuckGoProvider, 
@@ -35,6 +36,9 @@ class WebSearchTool(BaseTool):
             redaction_level=self.settings.privacy_redaction_level
         )
         self.budget = BudgetService(self.settings)
+        self.cache: Optional[RedisCache] = None
+        if self.settings.redis_url:
+            self.cache = RedisCache(self.settings.redis_url)
 
         self._definition = ToolDefinition(
             name="web_search",
@@ -104,6 +108,12 @@ class WebSearchTool(BaseTool):
         if not self.budget.check_availability("search", 1.0):
             return "ERROR: Search operation blocked by budget limit."
 
+        cache_key = f"web_search:{target_provider}:{max_results}:{query}"
+        if self.cache:
+            cached_payload = self.cache.get_json(cache_key)
+            if cached_payload is not None:
+                return json.dumps(cached_payload, indent=2)
+
         prov = self.providers[target_provider]
         
         logger.info(f"Executing web search with {target_provider}: {query}")
@@ -115,6 +125,9 @@ class WebSearchTool(BaseTool):
 
         if not results:
             return "No results found for the query."
+
+        if self.cache:
+            self.cache.set_json(cache_key, results)
 
         # 5. Privacy Redaction (Outbound)
         # Redact snippets in results to ensure no PII is returned to the agent context

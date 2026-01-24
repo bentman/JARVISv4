@@ -78,3 +78,34 @@ async def test_web_search_provider_fallback(mock_settings):
             
             # Should fallback to duckduckgo
             mock_ddg.search.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_web_search_uses_cache(mock_settings):
+    cached_results = [{"title": "Cached Result", "url": "http://cached"}]
+    cache_settings = Settings(
+        privacy_secret_key=mock_settings.privacy_secret_key,
+        privacy_salt=mock_settings.privacy_salt,
+        privacy_redaction_level=mock_settings.privacy_redaction_level,
+        budget_enforcement_level=mock_settings.budget_enforcement_level,
+        search_bing_api_key=mock_settings.search_bing_api_key,
+        search_tavily_api_key=mock_settings.search_tavily_api_key,
+        redis_url="redis://localhost:6379/0"
+    )
+
+    with patch('backend.tools.web_search.RedisCache') as mock_cache_class:
+        mock_cache = mock_cache_class.return_value
+        mock_cache.get_json.return_value = cached_results
+
+        with patch('backend.tools.web_search.load_settings', return_value=cache_settings):
+            tool = WebSearchTool()
+
+            with patch('backend.tools.web_search.DuckDuckGoProvider') as mock_ddg_class:
+                mock_ddg = mock_ddg_class.return_value
+                mock_ddg.search = AsyncMock()
+
+                result = await tool.execute(query="cache test", provider="duckduckgo")
+
+                assert json.loads(result) == cached_results
+                mock_cache.get_json.assert_called_once()
+                mock_ddg.search.assert_not_called()
