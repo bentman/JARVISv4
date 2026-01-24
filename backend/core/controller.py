@@ -9,7 +9,7 @@ from backend.core.config.settings import Settings, load_settings
 from backend.core.llm.provider import OpenAIProvider
 from backend.memory.working_state import WorkingStateManager
 from backend.agents.planner.planner import PlannerAgent, InvalidPlanError
-from backend.agents.executor.executor import ExecutorAgent
+from backend.agents.executor.executor import ExecutorAgent, EXECUTOR_SYSTEM_PROMPT
 from backend.tools.registry.registry import ToolRegistry
 from backend.tools.web_search import WebSearchTool
 from backend.memory.stores.trace_store import TraceStore
@@ -188,6 +188,19 @@ class ECFController:
 
         return executed_steps
 
+    async def _select_tool_for_step(self, step_description: str, goal: str, task_id: str) -> Dict[str, Any]:
+        tool_defs = self.registry.get_tool_definitions()
+        prompt = EXECUTOR_SYSTEM_PROMPT.format(
+            tool_definitions=json.dumps(tool_defs, indent=2)
+        )
+        user_prompt = (
+            f"Task Step: {step_description}\n"
+            f"Context: {json.dumps({'task_id': task_id, 'goal': goal})}"
+        )
+        full_prompt = f"{prompt}\n\n{user_prompt}"
+        response = await self.llm.generate(full_prompt)
+        return self.executor._parse_response(response)
+
     async def resume_task(self, task_id: str, max_steps: Optional[int] = None) -> str:
         """Resume execution of an existing task using on-disk state."""
         self.last_error = None
@@ -249,6 +262,22 @@ class ECFController:
                     domain="general",
                     task_id=task_id
                 )
+                task_state = self.state_manager.load_task(task_id)
+                for index, step in enumerate(task_state.get("next_steps", [])):
+                    step_description = step.get("description") if isinstance(step, dict) else None
+                    if not step_description:
+                        raise InvalidPlanError("Plan step missing description")
+                    selection = await self._select_tool_for_step(step_description, goal, task_id)
+                    tool_name = selection.get("tool")
+                    if not tool_name or tool_name == "none":
+                        raise InvalidPlanError(
+                            f"Plan step {index} not executable: no matching tool"
+                        )
+                    if not self.registry.get_tool(tool_name):
+                        raise InvalidPlanError(
+                            f"Plan step {index} not executable: tool '{tool_name}' not registered"
+                        )
+
                 self.trace_store.append_decision(
                     task_id,
                     "plan_accepted",
@@ -275,7 +304,7 @@ class ECFController:
                     "FAIL",
                     {"error": str(e), "goal": goal}
                 )
-                self.state_manager.update_task(task_id, {"status": "FAILED"})
+                self.state_manager.update_task(task_id, {"status": "FAILED", "error": str(e)})
                 self.state_manager.archive_task(task_id, reason="failed_plan")
                 return task_id
             

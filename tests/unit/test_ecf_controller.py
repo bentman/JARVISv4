@@ -154,3 +154,39 @@ async def test_controller_tool_exception_archives(controller_settings):
             archived_state = json.load(f)
             assert archived_state["status"] == "FAILED"
         assert task_id.startswith("task_")
+
+
+@pytest.mark.asyncio
+async def test_controller_rejects_plan_with_unknown_tool_fails_in_planning(controller_settings):
+    controller = ECFController(settings=controller_settings)
+    controller.registry.register_tool(StandardTestTool())
+
+    invalid_plan = {
+        "tasks": [
+            {"id": "1", "description": "Do an impossible step", "dependencies": [], "estimated_duration": "1m"}
+        ]
+    }
+
+    async def fail_if_called(*_, **__):
+        raise AssertionError("executor should not run")
+
+    async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
+        respx_mock.post("/chat/completions").mock(return_value=Response(200, json={
+            "choices": [{"message": {"content": json.dumps(invalid_plan)}}]
+        }))
+
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(controller.executor, "execute_step", fail_if_called)
+            task_id = await controller.run_task("Unknown Tool Planning")
+
+    assert controller.state == ControllerState.FAILED
+
+    archive_dir = controller_settings.working_storage_path / "archive"
+    archived = list(archive_dir.rglob("*failed_plan.json"))
+    assert len(archived) == 1
+    with open(archived[0], "r") as f:
+        archived_state = json.load(f)
+        assert archived_state["status"] == "FAILED"
+        assert "error" in archived_state
+        assert "not executable" in archived_state["error"]
+    assert task_id.startswith("task_")

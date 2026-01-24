@@ -13,6 +13,14 @@
 
 ## Entries
 
+- 2026-01-24 16:40
+  - Summary: Added a planning-stage tool executability guardrail that fails fast before execution when planned steps cannot be matched to any registered tool, and persists a clear error in the task artifact.
+  - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_rejects_plan_with_unknown_tool_fails_in_planning -q`
+    ```text
+    1 passed in 1.17s
+    ```
+
 - 2026-01-24 13:15
   - Summary: Documented deterministic task_id ownership: the Controller is authoritative (no dual task creation); the Planner updates the existing task rather than creating a second task.
   - Scope: `backend/core/controller.py`, `backend/agents/planner/planner.py`, `tests/agentic/test_ecf_core_flow.py`

@@ -530,6 +530,15 @@ Entries represent reported validations at a point in time and may require re-val
     ```
   - Notes: Confirms CLI-resolved `llm_base_url`/`llm_model` settings and `--llm-timeout-seconds`/`--llm-max-retries` are forwarded into `OpenAIProvider(...)` used by `ECFController`, including the `max_retries=0` no-retry case.
 
+- **Planning-Stage Tool Executability Guardrail (Fail Fast Before Execution)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_rejects_plan_with_unknown_tool_fails_in_planning -q`
+    ```text
+    1 passed in 1.17s
+    ```
+  - Notes: Validates each planned step is executable using the executor’s tool-selection logic before entering EXECUTING; if no tool matches, the task fails during PLANNING and is archived as FAILED with an `error` message recorded in the task state.
+
 ---
 
 ## Inventory Wording Normalization — 2026-01-23
