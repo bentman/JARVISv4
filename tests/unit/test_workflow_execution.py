@@ -89,3 +89,78 @@ async def test_workflow_error_handling():
     
     with pytest.raises(ValueError, match="memory_store not found in context"):
         await engine.execute_sequence(["read_node"], context)
+
+
+@pytest.mark.asyncio
+async def test_workflow_missing_node_in_sequence():
+    engine = WorkflowEngine()
+    store = InMemoryStore()
+    context = TaskContext(memory_store=store, data={"item_id": "missing"})
+
+    with pytest.raises(ValueError, match="Node missing_node not found in engine"):
+        await engine.execute_sequence(["missing_node"], context)
+
+
+@pytest.mark.asyncio
+async def test_workflow_invalid_context_type():
+    engine = WorkflowEngine()
+    with pytest.raises(TypeError, match="Context must be TaskContext"):
+        await engine.execute_sequence(["any_node"], context={})  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_workflow_sequence_determinism_resets_results():
+    engine = WorkflowEngine()
+    store = InMemoryStore()
+
+    async def echo_func(context, results):
+        return {"output": "first"}
+
+    echo_node = CallableNode(
+        id="echo_node",
+        node_type=NodeType.TOOL_CALL,
+        description="Echo",
+        func=echo_func
+    )
+    engine.add_node(echo_node)
+
+    context = TaskContext(memory_store=store, data={})
+    first_results = await engine.execute_sequence(["echo_node"], context)
+    assert first_results == {"echo_node": {"output": "first"}}
+
+    second_results = await engine.execute_sequence([], context)
+    assert second_results == {}
+
+
+@pytest.mark.asyncio
+async def test_workflow_sequence_error_propagation_keeps_prior_results():
+    engine = WorkflowEngine()
+    store = InMemoryStore()
+
+    async def ok_func(context, results):
+        return {"status": "ok"}
+
+    async def fail_func(context, results):
+        raise RuntimeError("boom")
+
+    ok_node = CallableNode(
+        id="ok_node",
+        node_type=NodeType.TOOL_CALL,
+        description="OK",
+        func=ok_func
+    )
+    fail_node = CallableNode(
+        id="fail_node",
+        node_type=NodeType.TOOL_CALL,
+        description="Fail",
+        func=fail_func
+    )
+    engine.add_node(ok_node)
+    engine.add_node(fail_node)
+
+    context = TaskContext(memory_store=store, data={})
+
+    with pytest.raises(RuntimeError, match="boom"):
+        await engine.execute_sequence(["ok_node", "fail_node"], context)
+
+    assert engine.node_results == {"ok_node": {"status": "ok"}}

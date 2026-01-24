@@ -13,6 +13,17 @@
 
 ## Entries
 
+- 2026-01-23 20:42
+  - Summary: Hardened ToolRegistry tool-call contract with deterministic error types and stable messages for not-found, schema validation, and execution failures.
+  - Scope: backend/tools/registry/registry.py, tests/unit/test_tool_registry.py
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_tool_registry.py -q` + `backend/.venv/Scripts/python -m pytest tests/unit/test_executor.py -q`
+    ```text
+    .....                                                                                                                 [100%]
+    5 passed in 0.08s
+    .                                                                                                                   [100%]
+    3 passed in 1.20s
+    ```
+
 - 2026-01-17 17:53
   - Summary: Established backend environment, entrypoint, and validation harness with reporting.
   - Scope: backend/main.py, backend/requirements.txt, scripts/validate_backend.py (generated: reports/*)
@@ -363,3 +374,11 @@
     ✓ PASS: tests.unit.test_web_search::test_web_search_provider_fallback
     ✅ JARVISv4 Current ./backend is validated!
     ```
+
+## Evidence Reproducibility Clarifications — 2026-01-23
+
+- Clarification: Entries dated 2026-01-19 citing `scripts/test_llm_connectivity.py`, `scripts/verify_planner_integration.py`, `scripts/verify_executor_integration.py`, `scripts/first_flight.py`, `scripts/validate_curator.py`, and `scripts/validate_mixer.py` reference evidence commands whose script files are not present in the current repo tree. As of 2026-01-23, `scripts/` contains only `validate_backend.py`, so those specific evidence commands are not reproducible from this checkout.
+  - Evidence: `ls scripts/`
+
+- Clarification: Entries that reference validation report files under `reports/` (e.g., 2026-01-17 17:53) cannot be re-verified by agents under current governance because `.clineignore` blocks access to `reports/` contents. The artifacts may exist, but their contents are not reproducible through agent tooling in this context.
+  - Evidence: root file listing showing `reports/` (🔒) and `.clineignore` includes `reports/`

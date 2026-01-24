@@ -63,6 +63,13 @@ Per mini-phase:
 - Implement only what was approved.
 - Validate with the smallest relevant check first; expand only after it passes.
 - Stop immediately after the objective is met and validated with evidence.
+After a mini-phase objective is completed and evidence is reported:
+- Do not propose follow-up work
+- Do not ask questions
+- Do not suggest “next steps”
+- Do not request scope clarification
+
+Stop output immediately unless the User explicitly requests another mini-phase.
 
 Failure loop rule:
 - If attempts repeat without changing the failure mode, stop and propose a different strategy.

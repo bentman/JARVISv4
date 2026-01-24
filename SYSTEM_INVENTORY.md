@@ -21,6 +21,19 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Tool Registry (Contract Hardening)**
+  - State: Verified
+  - Location: `backend/tools/registry/registry.py`, `tests/unit/test_tool_registry.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_tool_registry.py -q`
+    ```text
+    5 passed in 0.08s
+    ```
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_executor.py -q`
+    ```text
+    3 passed in 1.20s
+    ```
+  - Notes: Tool-call boundary now yields deterministic typed failures with stable messages for unknown tools, schema-invalid params, and tool execution errors.
+
 - **Governance Scaffolding**
   - State: Verified
   - Location: `AGENTS.md`, `CHANGE_LOG.md`, `SYSTEM_INVENTORY.md`, `Project.md`, `.clinerules/`
@@ -403,3 +416,55 @@ Entries represent reported validations at a point in time and may require re-val
     ✓ PASS: tests.unit.test_web_search::test_web_search_provider_fallback
     ```
   - Notes: Deterministic Web Search tool with multi-provider support (DuckDuckGo, Bing, Tavily, Google). Features integrated Privacy Redaction (PII scrubbing) and Budget enforcement.
+
+---
+
+## Inventory Wording Normalization — 2026-01-23
+
+- **ECF Controller (Clarification)**
+  - Clarification: The agentic “first flight” test uses mocked LLM responses and verifies planning → execution → archiving behavior plus artifact persistence. Unit tests cover controller components. This evidence does not establish full architectural completeness beyond the current control loop.
+  - Evidence: `tests/agentic/test_ecf_core_flow.py`, `backend/core/controller.py`
+
+- **Regression Suite (Clarification)**
+  - Clarification: Implements an LLM-judge regression evaluator over mined SQLite task metadata and is validated by unit tests. End-to-end tests depend on an available OpenAI-compatible endpoint (e.g., local Ollama). Production readiness is not established by these tests alone.
+  - Evidence: `backend/learning/regression.py`, `tests/unit/test_regression.py`
+
+- **Full Learning Cycle (Clarification)**
+  - Clarification: Integration coverage demonstrates task trace generation → episode curation → dataset mixing → training orchestration (dry-run). It does not evidence a full fine-tune + deploy workflow.
+  - Evidence: `tests/integration/test_learning_cycle.py` (via `scripts/validate_backend.py` entry)
+
+- **Semantic Memory (Tier 3) (Clarification)**
+  - Clarification: Implements tier-3 semantic memory using SentenceTransformer embeddings with sklearn nearest-neighbor retrieval persisted in SQLite. Unit tests validate init/add/retrieve/persistence/guardrails; runtime performance or “warning-free” claims are not evidenced here.
+  - Evidence: `backend/memory/stores/semantic.py`, `tests/unit/test_semantic_memory.py`
+
+## Memory Architecture Clarifications — 2026-01-23
+
+- **Tier 1 Working State (Clarification)**
+  - Clarification: Tier‑1 working state is implemented as JSON task files with required fields and atomic updates via `WorkingStateManager`. This reflects the current ephemeral task-state surface (create/update/complete/archive), not the full ECF memory contract beyond the fields enforced in `working_state.py`.
+  - Evidence: `backend/memory/working_state.py`, `tests/unit/test_working_state.py`
+
+- **Tier 2 Episodic Store (Clarification)**
+  - Clarification: The current Tier‑2 persistence surface is a generic `SQLiteStore` that saves `MemoryItem` records into a single `memory_items` table (id/content/timestamp/metadata). It does **not** implement the richer episodic trace schema described in the ECF target (e.g., decisions/tool_calls/validations tables) within this repo snapshot.
+  - Evidence: `backend/memory/stores/sqlite_store.py`, `backend/memory/schemas/memory.py`, `tests/integration/test_sqlite_memory_store.py`
+
+- **Tier 2 Store Selection (Clarification)**
+  - Clarification: `create_memory_store` selects between in‑memory and SQLite stores based on settings. This is a store factory, not a full episodic trace/logging subsystem.
+  - Evidence: `backend/memory/factory.py`
+
+- **Tier 3 Semantic Memory (Clarification)**
+  - Clarification: Tier‑3 semantic memory is implemented using SentenceTransformer embeddings with sklearn `NearestNeighbors` plus SQLite tables for patterns/guardrails. This provides vector similarity + metadata filtering, but does not represent a FAISS-based or external vector DB tier in this repo.
+  - Evidence: `backend/memory/stores/semantic.py`, `tests/unit/test_semantic_memory.py`
+
+- **Memory Integration Node (Clarification)**
+  - Clarification: The `MemoryWriteNode` integrates with the memory schemas and working state context, but does not on its own establish a complete three‑tier orchestration layer.
+  - Evidence: `backend/controller/nodes/memory_op.py`, `tests/unit/test_memory_node.py`
+
+## Deployment Surface Clarifications — 2026-01-23
+
+- **Docker/Compose Surfaces (Clarification)**
+  - Clarification: `docker-compose.yml` and `docker-compose.dev.yml` are present as migration/scaffolding surfaces. They include explicit `# reserved:` annotations and reference images/build steps that are not fully defined in this repo snapshot (e.g., `backend/Dockerfile`, frontend implementation). Their presence should not be read as evidence of a runnable deployment stack.
+  - Evidence: `docker-compose.yml`, `docker-compose.dev.yml`
+
+- **Root Config Templates (Clarification)**
+  - Clarification: The `.env.example` and `.env.dev.example` templates and compose files are validated for presence only (per the existing inventory validation). This entry reflects configuration scaffolding, not deployment readiness.
+  - Evidence: existing inventory entry “Root Config Templates” + `docker-compose.yml`/`docker-compose.dev.yml` reserved comments.

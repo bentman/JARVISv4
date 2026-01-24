@@ -72,6 +72,13 @@ class ECFController:
             except InvalidPlanError as e:
                 logger.error(f"Planning failed: {str(e)}")
                 self.state = ControllerState.FAILED
+                task_id = self.state_manager.create_task({
+                    "goal": goal,
+                    "domain": "general",
+                    "constraints": []
+                })
+                self.state_manager.update_task(task_id, {"status": "FAILED"})
+                self.state_manager.archive_task(task_id, reason="failed_plan")
                 return "FAILED_PLAN" # Or handle better if we had a task_id already
             
             # PHASE 2: EXECUTING
@@ -112,6 +119,7 @@ class ECFController:
                 if outcome["status"] == "FAILED":
                     logger.error(f"Step {step_index} failed: {outcome.get('error')}")
                     self.state_manager.update_task(task_id, {"status": "FAILED"})
+                    self.state_manager.archive_task(task_id, reason="failed_execute")
                     self.state = ControllerState.FAILED
                     break
                 
@@ -143,6 +151,7 @@ class ECFController:
             self.state = ControllerState.FAILED
             if task_id:
                 self.state_manager.update_task(task_id, {"status": "FAILED"})
+                self.state_manager.archive_task(task_id, reason="error")
             return task_id or "ERROR"
         finally:
             await self.llm.close()

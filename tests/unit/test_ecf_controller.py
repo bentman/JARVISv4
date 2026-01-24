@@ -78,6 +78,13 @@ async def test_controller_planning_failure(controller_settings):
         result = await controller.run_task("Invalid Goal")
         assert result == "FAILED_PLAN"
         assert controller.state == ControllerState.FAILED
+        
+        archive_dir = controller_settings.working_storage_path / "archive"
+        archived = list(archive_dir.rglob("*failed_plan.json"))
+        assert len(archived) == 1
+        with open(archived[0], "r") as f:
+            archived_state = json.load(f)
+            assert archived_state["status"] == "FAILED"
 
 @pytest.mark.asyncio
 async def test_controller_execution_failure(controller_settings):
@@ -97,6 +104,42 @@ async def test_controller_execution_failure(controller_settings):
         task_id = await controller.run_task("Failing Task")
         assert controller.state == ControllerState.FAILED
         
-        # Verify state file reflects failure
-        task_state = controller.state_manager.load_task(task_id)
-        assert task_state["status"] == "FAILED"
+        archive_dir = controller_settings.working_storage_path / "archive"
+        archived = list(archive_dir.rglob("*failed_execute.json"))
+        assert len(archived) == 1
+        with open(archived[0], "r") as f:
+            archived_state = json.load(f)
+            assert archived_state["status"] == "FAILED"
+
+
+@pytest.mark.asyncio
+async def test_controller_tool_exception_archives(controller_settings):
+    controller = ECFController(settings=controller_settings)
+
+    valid_plan = {
+        "tasks": [
+            {"id": "1", "description": "Run standard_test_tool", "dependencies": [], "estimated_duration": "1m"}
+        ]
+    }
+    
+    async def raise_execute_step(*_, **__):
+        raise RuntimeError("tool failure")
+
+    async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
+        respx_mock.post("/chat/completions").mock(return_value=Response(200, json={
+            "choices": [{"message": {"content": json.dumps(valid_plan)}}]
+        }))
+        
+        with pytest.MonkeyPatch.context() as monkeypatch:
+            monkeypatch.setattr(controller.executor, "execute_step", raise_execute_step)
+            task_id = await controller.run_task("Tool Exception")
+
+        assert controller.state == ControllerState.FAILED
+
+        archive_dir = controller_settings.working_storage_path / "archive"
+        archived = list(archive_dir.rglob("*error.json"))
+        assert len(archived) == 1
+        with open(archived[0], "r") as f:
+            archived_state = json.load(f)
+            assert archived_state["status"] == "FAILED"
+        assert task_id.startswith("task_")

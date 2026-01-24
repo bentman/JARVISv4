@@ -10,6 +10,18 @@ from backend.tools.base import BaseTool, ToolDefinition
 
 logger = logging.getLogger(__name__)
 
+
+class ToolNotFoundError(ValueError):
+    """Raised when a requested tool is not registered."""
+
+
+class ToolParameterValidationError(ValueError):
+    """Raised when tool parameters fail JSON schema validation."""
+
+
+class ToolExecutionError(RuntimeError):
+    """Raised when a tool execution fails."""
+
 class ToolRegistry:
     """
     Registry for managing and invoking deterministic tools.
@@ -50,14 +62,22 @@ class ToolRegistry:
         """
         tool = self.get_tool(name)
         if not tool:
-            raise ValueError(f"Tool {name} not found in registry")
+            raise ToolNotFoundError(f"Tool '{name}' not found")
 
         # Validate arguments against tool's JSON Schema
         try:
             validate(instance=kwargs, schema=tool.definition.parameters)
         except ValidationError as e:
             logger.error(f"Validation error for tool {name}: {str(e)}")
-            raise ValueError(f"Invalid parameters for tool {name}: {e.message}")
+            raise ToolParameterValidationError(
+                f"Invalid parameters for tool '{name}': {e.message}"
+            )
 
         logger.info(f"Calling tool: {name}")
-        return await tool.execute(**kwargs)
+        try:
+            return await tool.execute(**kwargs)
+        except Exception as e:
+            logger.error(f"Tool execution failed for {name}: {str(e)}")
+            raise ToolExecutionError(
+                f"Tool '{name}' execution failed: {e}"
+            ) from e

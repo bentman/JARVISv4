@@ -54,6 +54,7 @@ class WorkflowEngine:
         """
         Execute an ordered list of nodes sequentially.
         """
+        self.node_results = {}
         for node_id in node_ids:
             logger.info(f"Executing node {node_id} in sequence")
             await self.execute_node(node_id, context)
