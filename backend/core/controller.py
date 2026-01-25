@@ -351,8 +351,26 @@ class ECFController:
         if status in {"COMPLETED", "FAILED"}:
             raise ValueError(f"Task {task_id} is not resumable (status={status})")
 
-        if task_state.get("current_step"):
-            raise ValueError(f"Cannot resume task {task_id} with current_step in-flight")
+        current_step = task_state.get("current_step")
+        if current_step:
+            step_description = current_step.get("description")
+            if step_description:
+                next_steps = task_state.get("next_steps", [])
+                if not next_steps or next_steps[0].get("description") != step_description:
+                    next_steps = [
+                        {"description": step_description}
+                    ] + next_steps
+                task_state = self.state_manager.update_task(task_id, {
+                    "current_step": None,
+                    "next_steps": next_steps,
+                    "status": "IN_PROGRESS"
+                })
+                logger.info(
+                    "Re-queued in-flight step for deterministic resume: "
+                    f"task_id={task_id} description={step_description}"
+                )
+            else:
+                raise ValueError(f"Cannot resume task {task_id} with incomplete current_step")
 
         goal = task_state.get("goal", "")
         self.state = ControllerState.EXECUTING

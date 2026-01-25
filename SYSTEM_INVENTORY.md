@@ -6,6 +6,8 @@ Entries represent reported validations at a point in time and may require re-val
 - Additive updates only. Do not rewrite history. If a prior entry is wrong, append a correction with date + evidence pointer.
 - Promote a capability only when supported by validation evidence (tests, harness runs, or reproducible runtime checks).
 - Skips/warnings do not count as validation unless they are explicitly the intended outcome.
+- **Ordering:** Entries are maintained in **descending recency** (most recently validated capabilities at the top).
+- **Append location:** New capability entries and corrections must be added **at the top of the Inventory section**, directly under `## Inventory`.
 - Keep entries terse and concrete:
   - Capability name
   - Current state (pick one and use consistently)
