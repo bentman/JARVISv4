@@ -278,3 +278,68 @@ async def test_controller_fails_when_max_executed_steps_exceeded(controller_sett
         assert archived_state["failure_cause"] == "execution_step_failed"
         assert "MAX_EXECUTED_STEPS" in archived_state["error"]
     assert task_id.startswith("task_")
+
+
+def test_task_outcome_analytics_counts_failed_by_cause_deterministic(tmp_path):
+    settings = Settings(
+        app_name="TestApp",
+        working_storage_path=tmp_path,
+        llm_model="test-model",
+        llm_base_url="http://mock-llm/v1"
+    )
+    controller = ECFController(settings=settings)
+
+    planning_failed_id = controller.state_manager.create_task({
+        "goal": "Plan fail",
+        "domain": "general",
+        "constraints": [],
+        "next_steps": []
+    })
+    controller.state_manager.update_task(planning_failed_id, {
+        "status": "FAILED",
+        "failure_cause": "planning_invalid"
+    })
+
+    unknown_failed_id = controller.state_manager.create_task({
+        "goal": "Unknown fail",
+        "domain": "general",
+        "constraints": [],
+        "next_steps": []
+    })
+    controller.state_manager.update_task(unknown_failed_id, {
+        "status": "FAILED"
+    })
+
+    executed_failed_id = controller.state_manager.create_task({
+        "goal": "Execute fail",
+        "domain": "general",
+        "constraints": [],
+        "next_steps": []
+    })
+    controller.state_manager.update_task(executed_failed_id, {
+        "status": "FAILED",
+        "failure_cause": "execution_step_failed"
+    })
+    controller.state_manager.archive_task(executed_failed_id, reason="failed_execute")
+
+    completed_id = controller.state_manager.create_task({
+        "goal": "Completed",
+        "domain": "general",
+        "constraints": [],
+        "next_steps": []
+    })
+    controller.state_manager.update_task(completed_id, {
+        "status": "COMPLETED"
+    })
+    controller.state_manager.archive_task(completed_id, reason="completed")
+
+    summary = controller.summarize_task_outcomes()
+
+    assert summary["total"] == 4
+    assert summary["by_status"]["FAILED"] == 3
+    assert summary["by_status"]["COMPLETED"] == 1
+    assert summary["failed_by_cause"] == {
+        "planning_invalid": 1,
+        "execution_step_failed": 1,
+        "unknown": 1
+    }

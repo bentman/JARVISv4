@@ -13,6 +13,14 @@
 
 ## Entries
 
+- 2026-01-24 20:45
+  - Summary: Added bounded multi-task orchestration to execute a batch of tasks sequentially and deterministically terminate on first observed failure using artifact analytics.
+  - Scope: `backend/core/controller.py`, `tests/agentic/test_ecf_core_flow.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_ecf_core_flow.py::test_orchestrate_task_batch_terminates_on_failure_via_analytics -q`
+    ```text
+    1 passed in 1.59s
+    ```
+
 - 2026-01-24 18:48
   - Summary: Added deterministic max-step guardrails for planning/execution (bounded by constants) while reusing existing failure causes for early, explicit failures.
   - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`

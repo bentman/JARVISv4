@@ -117,6 +117,84 @@ class ECFController:
 
         return sorted(summaries, key=_sort_key)
 
+    def summarize_task_outcomes(self) -> Dict[str, Any]:
+        """Read-only analytics derived from on-disk ACTIVE + ARCHIVED task artifacts."""
+        totals: Dict[str, int] = {}
+        failed_by_cause: Dict[str, int] = {}
+        total_count = 0
+
+        summaries = self.list_task_summaries()
+        for summary in summaries:
+            source_path = summary.get("source_path")
+            if not source_path:
+                continue
+            try:
+                state = json.loads(Path(source_path).read_text())
+            except Exception as exc:
+                logger.warning(f"Skipping task analytics for {source_path}: {exc}")
+                continue
+
+            total_count += 1
+            status = state.get("status") or "unknown"
+            totals[status] = totals.get(status, 0) + 1
+
+            if status == "FAILED":
+                failure_cause = state.get("failure_cause") or "unknown"
+                failed_by_cause[failure_cause] = failed_by_cause.get(failure_cause, 0) + 1
+
+        return {
+            "total": total_count,
+            "by_status": totals,
+            "failed_by_cause": failed_by_cause
+        }
+
+    async def orchestrate_task_batch(
+        self,
+        goals: List[str],
+        max_tasks: int = 3,
+        min_stall_age_seconds: float = 0
+    ) -> Dict[str, Any]:
+        """Run a bounded batch of tasks sequentially and stop on first analytics failure."""
+        task_ids: List[str] = []
+        decisions: List[Dict[str, Any]] = []
+        stop_reason = "no_goals"
+
+        settings = self.settings
+        for goal in goals[:max_tasks]:
+            controller = ECFController(settings=settings)
+            task_id = await controller.run_task(goal)
+            task_ids.append(task_id)
+
+            await controller.supervisor_resume_stalled_tasks(
+                min_age_seconds=min_stall_age_seconds,
+                max_tasks=1
+            )
+            analytics = controller.summarize_task_outcomes()
+            failed_total = sum(analytics.get("failed_by_cause", {}).values())
+
+            action = "continue"
+            if failed_total > 0:
+                action = "stop"
+                stop_reason = "failure_detected"
+            decisions.append({
+                "task_id": task_id,
+                "analytics": analytics,
+                "action": action
+            })
+
+            if action == "stop":
+                break
+
+        if task_ids and stop_reason == "no_goals":
+            if len(task_ids) >= min(max_tasks, len(goals)):
+                stop_reason = "max_tasks_reached"
+
+        return {
+            "task_ids": task_ids,
+            "decisions": decisions,
+            "stop_reason": stop_reason
+        }
+
     async def supervisor_resume_stalled_tasks(
         self,
         min_age_seconds: float,
