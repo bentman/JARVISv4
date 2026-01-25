@@ -52,9 +52,9 @@ async def test_controller_full_lifecycle(controller_settings):
     }
     
     async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
-        # We expect two calls: one for planning, one for executing the single step
         respx_mock.post("/chat/completions").mock(side_effect=[
             Response(200, json={"choices": [{"message": {"content": json.dumps(valid_plan)}}]}),
+            Response(200, json={"choices": [{"message": {"content": json.dumps(mock_selection)}}]}),
             Response(200, json={"choices": [{"message": {"content": json.dumps(mock_selection)}}]})
         ])
         
@@ -96,6 +96,7 @@ async def test_controller_planning_failure(controller_settings):
         with open(archived[0], "r") as f:
             archived_state = json.load(f)
             assert archived_state["status"] == "FAILED"
+            assert archived_state["failure_cause"] == "planning_invalid"
 
 @pytest.mark.asyncio
 async def test_controller_execution_failure(controller_settings):
@@ -116,11 +117,13 @@ async def test_controller_execution_failure(controller_settings):
         assert controller.state == ControllerState.FAILED
         
         archive_dir = controller_settings.working_storage_path / "archive"
-        archived = list(archive_dir.rglob("*failed_execute.json"))
+        archived = list(archive_dir.rglob("*failed_plan.json"))
         assert len(archived) == 1
         with open(archived[0], "r") as f:
             archived_state = json.load(f)
             assert archived_state["status"] == "FAILED"
+            assert "error" in archived_state
+            assert "not executable" in archived_state["error"]
 
 
 @pytest.mark.asyncio
@@ -136,10 +139,17 @@ async def test_controller_tool_exception_archives(controller_settings):
     async def raise_execute_step(*_, **__):
         raise RuntimeError("tool failure")
 
+    guardrail_selection = {
+        "tool": "text_output",
+        "params": {"text": "ok"},
+        "rationale": "Registered tool for planning"
+    }
+
     async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
-        respx_mock.post("/chat/completions").mock(return_value=Response(200, json={
-            "choices": [{"message": {"content": json.dumps(valid_plan)}}]
-        }))
+        respx_mock.post("/chat/completions").mock(side_effect=[
+            Response(200, json={"choices": [{"message": {"content": json.dumps(valid_plan)}}]}),
+            Response(200, json={"choices": [{"message": {"content": json.dumps(guardrail_selection)}}]})
+        ])
         
         with pytest.MonkeyPatch.context() as monkeypatch:
             monkeypatch.setattr(controller.executor, "execute_step", raise_execute_step)

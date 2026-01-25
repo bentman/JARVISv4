@@ -28,6 +28,8 @@ class IntegrationTemplateTool(BaseTool):
 async def test_ecf_first_flight_e2e(tmp_path, monkeypatch, caplog):
     # Setup isolated environment for the test
     monkeypatch.setenv("WORKING_STORAGE_PATH", str(tmp_path / "tasks"))
+    monkeypatch.setenv("LLM_BASE_URL", "http://mock-llm/v1")
+    monkeypatch.setenv("LLM_MODEL", "test-model")
     
     controller = ECFController()
     controller.registry.register_tool(IntegrationTemplateTool())
@@ -48,10 +50,9 @@ async def test_ecf_first_flight_e2e(tmp_path, monkeypatch, caplog):
     caplog.set_level("WARNING")
 
     async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
-        controller.llm.client.base_url = "http://mock-llm/v1"
-        
         respx_mock.post("http://mock-llm/v1/chat/completions").mock(side_effect=[
             Response(200, json={"choices": [{"message": {"content": json.dumps(planner_plan)}}]}),
+            Response(200, json={"choices": [{"message": {"content": json.dumps(executor_selection)}}]}),
             Response(200, json={"choices": [{"message": {"content": json.dumps(executor_selection)}}]})
         ])
         

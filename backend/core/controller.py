@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import json
+import time
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pathlib import Path
@@ -12,6 +13,7 @@ from backend.agents.planner.planner import PlannerAgent, InvalidPlanError
 from backend.agents.executor.executor import ExecutorAgent, EXECUTOR_SYSTEM_PROMPT
 from backend.tools.registry.registry import ToolRegistry
 from backend.tools.web_search import WebSearchTool
+from backend.tools.text_output import TextOutputTool
 from backend.memory.stores.trace_store import TraceStore
 
 logger = logging.getLogger(__name__)
@@ -65,6 +67,7 @@ class ECFController:
         
         # Register Default Tools
         self.registry.register_tool(WebSearchTool(self.settings))
+        self.registry.register_tool(TextOutputTool())
         
         logger.info("ECFController initialized and READY.")
 
@@ -111,6 +114,48 @@ class ECFController:
             return (lifecycle_rank, item.get("task_id", ""))
 
         return sorted(summaries, key=_sort_key)
+
+    async def supervisor_resume_stalled_tasks(
+        self,
+        min_age_seconds: float,
+        max_tasks: int = 10
+    ) -> List[str]:
+        """Resume eligible ACTIVE tasks older than min_age_seconds (deterministic order)."""
+        resumed: List[str] = []
+
+        summaries = self.list_task_summaries()
+        for summary in summaries:
+            if len(resumed) >= max_tasks:
+                break
+            if summary.get("lifecycle") != "ACTIVE":
+                continue
+            status = summary.get("status")
+            if status not in {"CREATED", "IN_PROGRESS"}:
+                continue
+            if summary.get("has_current_step"):
+                continue
+
+            source_path = summary.get("source_path")
+            if not source_path:
+                continue
+
+            try:
+                mtime = Path(source_path).stat().st_mtime
+            except FileNotFoundError:
+                continue
+
+            age_seconds = time.time() - mtime
+            if age_seconds < min_age_seconds:
+                continue
+
+            task_id = summary.get("task_id")
+            if not task_id:
+                continue
+
+            await self.resume_task(task_id)
+            resumed.append(task_id)
+
+        return resumed
 
     async def _execute_remaining_steps(self, task_id: str, goal: str, max_steps: Optional[int] = None) -> int:
         """Execute remaining steps for an existing task state."""
@@ -171,7 +216,11 @@ class ECFController:
             if outcome["status"] == "FAILED":
                 logger.error(f"Step {step_index} failed: {outcome.get('error')}")
                 self.last_error = outcome.get("error") or "Step execution failed"
-                self.state_manager.update_task(task_id, {"status": "FAILED"})
+                self.state_manager.update_task(task_id, {
+                    "status": "FAILED",
+                    "error": self.last_error,
+                    "failure_cause": "execution_step_failed"
+                })
                 self.state_manager.archive_task(task_id, reason="failed_execute")
                 self.state = ControllerState.FAILED
                 break
@@ -304,7 +353,11 @@ class ECFController:
                     "FAIL",
                     {"error": str(e), "goal": goal}
                 )
-                self.state_manager.update_task(task_id, {"status": "FAILED", "error": str(e)})
+                self.state_manager.update_task(task_id, {
+                    "status": "FAILED",
+                    "error": str(e),
+                    "failure_cause": "planning_invalid"
+                })
                 self.state_manager.archive_task(task_id, reason="failed_plan")
                 return task_id
             
@@ -343,7 +396,11 @@ class ECFController:
                 "controller_error",
                 {"error": str(e)}
             )
-            self.state_manager.update_task(task_id, {"status": "FAILED"})
+            self.state_manager.update_task(task_id, {
+                "status": "FAILED",
+                "error": self.last_error,
+                "failure_cause": "controller_error"
+            })
             self.state_manager.archive_task(task_id, reason="error")
             return task_id
         finally:

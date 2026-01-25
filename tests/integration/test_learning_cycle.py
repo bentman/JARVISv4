@@ -38,6 +38,8 @@ async def test_full_learning_cycle(tmp_path, monkeypatch):
     storage_root = tmp_path / "tasks"
     archive_dir = storage_root / "archive"
     monkeypatch.setenv("WORKING_STORAGE_PATH", str(storage_root))
+    monkeypatch.setenv("LLM_BASE_URL", "http://mock-llm/v1")
+    monkeypatch.setenv("LLM_MODEL", "test-model")
     
     # 1. GENERATE EPISODE
     # We execute a task via the ECFController to create a successful execution trace.
@@ -59,10 +61,9 @@ async def test_full_learning_cycle(tmp_path, monkeypatch):
     }
     
     async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
-        controller.llm.client.base_url = "http://mock-llm/v1"
-        
         respx_mock.post("http://mock-llm/v1/chat/completions").mock(side_effect=[
             Response(200, json={"choices": [{"message": {"content": json.dumps(planner_plan)}}]}),
+            Response(200, json={"choices": [{"message": {"content": json.dumps(executor_selection)}}]}),
             Response(200, json={"choices": [{"message": {"content": json.dumps(executor_selection)}}]})
         ])
         

@@ -21,6 +21,24 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Typed Task Failure Causes (failure_cause + error in task artifacts)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_planning_failure -q`
+    ```text
+    1 passed in 1.06s
+    ```
+  - Notes: FAILED task artifacts now persist `failure_cause` (coarse values: `planning_invalid`, `execution_step_failed`, `controller_error`) and also persist `error` across planning, execution-step, and controller-exception failure paths.
+
+- **Deterministic Text Output Tool (text_output)**
+  - State: Verified
+  - Location: `backend/tools/text_output.py`, `backend/core/controller.py`, `tests/agentic/test_deterministic_text_output_tool.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_deterministic_text_output_tool.py -q`
+    ```text
+    1 passed in 1.08s
+    ```
+  - Notes: Provides a deterministic, side-effect-free executor tool for returning literal text; supports end-to-end task completion validation without external dependencies.
+
 - **Proxy Readiness Primitives (Health + API Prefix)**
   - State: Verified
   - Location: `backend/api/app.py`

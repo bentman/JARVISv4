@@ -13,6 +13,22 @@
 
 ## Entries
 
+- 2026-01-24 17:32
+  - Summary: Persisted coarse typed task failure causes (`failure_cause`) and ensured `error` is recorded on all FAILED task archival paths.
+  - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_planning_failure -q`
+    ```text
+    1 passed in 1.06s
+    ```
+
+- 2026-01-24 16:59
+  - Summary: Added a deterministic, side-effect-free `text_output` tool that returns caller-provided text verbatim, and validated an end-to-end task completes using it.
+  - Scope: `backend/tools/text_output.py`, `backend/core/controller.py`, `tests/agentic/test_deterministic_text_output_tool.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_deterministic_text_output_tool.py -q`
+    ```text
+    1 passed in 1.08s
+    ```
+
 - 2026-01-24 16:40
   - Summary: Added a planning-stage tool executability guardrail that fails fast before execution when planned steps cannot be matched to any registered tool, and persists a clear error in the task artifact.
   - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
