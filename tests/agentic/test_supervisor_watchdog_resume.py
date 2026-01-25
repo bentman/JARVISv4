@@ -18,8 +18,8 @@ async def test_supervisor_resumes_stalled_task(tmp_path, monkeypatch):
     monkeypatch.setenv("LLM_MODEL", "test-model")
 
     state_manager = WorkingStateManager(tasks_path)
-    task_id = state_manager.create_task({
-        "goal": "Resume stalled task",
+    created_task_id = state_manager.create_task({
+        "goal": "Created task",
         "domain": "general",
         "constraints": [],
         "next_steps": [
@@ -32,9 +32,26 @@ async def test_supervisor_resumes_stalled_task(tmp_path, monkeypatch):
         ]
     })
 
-    task_file = tasks_path / f"{task_id}.json"
+    in_progress_task_id = state_manager.create_task({
+        "goal": "Resume stalled task",
+        "domain": "general",
+        "constraints": [],
+        "next_steps": [
+            {
+                "id": "1",
+                "description": "Return exactly: Watchdog OK",
+                "dependencies": [],
+                "estimated_duration": "1m"
+            }
+        ]
+    })
+    state_manager.update_task(in_progress_task_id, {"status": "IN_PROGRESS"})
+
+    created_task_file = tasks_path / f"{created_task_id}.json"
+    in_progress_task_file = tasks_path / f"{in_progress_task_id}.json"
     old_timestamp = time.time() - 120
-    os.utime(task_file, (old_timestamp, old_timestamp))
+    os.utime(created_task_file, (old_timestamp, old_timestamp))
+    os.utime(in_progress_task_file, (old_timestamp, old_timestamp))
 
     controller = ECFController()
     resume_calls = {"count": 0}
@@ -59,14 +76,16 @@ async def test_supervisor_resumes_stalled_task(tmp_path, monkeypatch):
         controller.resume_task = resume_spy
         resumed = await controller.supervisor_resume_stalled_tasks(min_age_seconds=60)
 
-    assert resumed == [task_id]
+    expected_order = sorted([in_progress_task_id])
+    assert resumed == expected_order
     assert resume_calls["count"] == 1
 
-    archive_files = list((tasks_path / "archive").rglob(f"*{task_id}*completed.json"))
+    archive_files = list((tasks_path / "archive").rglob(f"*{in_progress_task_id}*completed.json"))
     assert len(archive_files) == 1
-    assert not task_file.exists()
+    assert not in_progress_task_file.exists()
+    assert created_task_file.exists()
 
     with open(archive_files[0], "r") as archived:
         archived_state = json.load(archived)
         assert archived_state["status"] == "COMPLETED"
-        assert archived_state["task_id"] == task_id
+        assert archived_state["task_id"] == in_progress_task_id

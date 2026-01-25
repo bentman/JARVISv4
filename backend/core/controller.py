@@ -32,6 +32,8 @@ class ECFController:
     Authoritative spine of the system managing the ECF Layer 1 loop.
     Coordinates between State, Planner, and Executor.
     """
+    MAX_PLANNED_STEPS = 100
+    MAX_EXECUTED_STEPS = 100
     
     def __init__(
         self,
@@ -130,7 +132,7 @@ class ECFController:
             if summary.get("lifecycle") != "ACTIVE":
                 continue
             status = summary.get("status")
-            if status not in {"CREATED", "IN_PROGRESS"}:
+            if status != "IN_PROGRESS":
                 continue
             if summary.get("has_current_step"):
                 continue
@@ -165,6 +167,19 @@ class ECFController:
             next_steps = task_state.get("next_steps", [])
             if not next_steps:
                 logger.info("No more steps in plan. Completion reached.")
+                break
+
+            if executed_steps >= self.MAX_EXECUTED_STEPS:
+                self.last_error = (
+                    f"Exceeded MAX_EXECUTED_STEPS={self.MAX_EXECUTED_STEPS}"
+                )
+                self.state_manager.update_task(task_id, {
+                    "status": "FAILED",
+                    "error": self.last_error,
+                    "failure_cause": "execution_step_failed"
+                })
+                self.state_manager.archive_task(task_id, reason="failed_execute")
+                self.state = ControllerState.FAILED
                 break
 
             if max_steps is not None and executed_steps >= max_steps:
@@ -312,7 +327,13 @@ class ECFController:
                     task_id=task_id
                 )
                 task_state = self.state_manager.load_task(task_id)
-                for index, step in enumerate(task_state.get("next_steps", [])):
+                planned_steps = task_state.get("next_steps", [])
+                if len(planned_steps) > self.MAX_PLANNED_STEPS:
+                    raise InvalidPlanError(
+                        "Plan has too many steps: "
+                        f"{len(planned_steps)} > MAX_PLANNED_STEPS={self.MAX_PLANNED_STEPS}"
+                    )
+                for index, step in enumerate(planned_steps):
                     step_description = step.get("description") if isinstance(step, dict) else None
                     if not step_description:
                         raise InvalidPlanError("Plan step missing description")

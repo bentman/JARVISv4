@@ -200,3 +200,81 @@ async def test_controller_rejects_plan_with_unknown_tool_fails_in_planning(contr
         assert "error" in archived_state
         assert "not executable" in archived_state["error"]
     assert task_id.startswith("task_")
+
+
+@pytest.mark.asyncio
+async def test_controller_rejects_plan_exceeding_max_planned_steps(controller_settings):
+    controller = ECFController(settings=controller_settings)
+    controller.registry.register_tool(StandardTestTool())
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(controller, "MAX_PLANNED_STEPS", 1)
+
+        invalid_plan = {
+            "tasks": [
+                {"id": "1", "description": "Run standard_test_tool", "dependencies": [], "estimated_duration": "1m"},
+                {"id": "2", "description": "Run standard_test_tool", "dependencies": ["1"], "estimated_duration": "1m"}
+            ]
+        }
+
+        async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
+            respx_mock.post("/chat/completions").mock(return_value=Response(200, json={
+                "choices": [{"message": {"content": json.dumps(invalid_plan)}}]
+            }))
+
+            task_id = await controller.run_task("Plan too long")
+
+    assert controller.state == ControllerState.FAILED
+
+    archive_dir = controller_settings.working_storage_path / "archive"
+    archived = list(archive_dir.rglob("*failed_plan.json"))
+    assert len(archived) == 1
+    with open(archived[0], "r") as f:
+        archived_state = json.load(f)
+        assert archived_state["status"] == "FAILED"
+        assert archived_state["failure_cause"] == "planning_invalid"
+        assert "MAX_PLANNED_STEPS" in archived_state["error"]
+    assert task_id.startswith("task_")
+
+
+@pytest.mark.asyncio
+async def test_controller_fails_when_max_executed_steps_exceeded(controller_settings):
+    controller = ECFController(settings=controller_settings)
+    controller.registry.register_tool(StandardTestTool())
+
+    valid_plan = {
+        "tasks": [
+            {"id": "1", "description": "Run standard_test_tool", "dependencies": [], "estimated_duration": "1m"},
+            {"id": "2", "description": "Run standard_test_tool", "dependencies": ["1"], "estimated_duration": "1m"}
+        ]
+    }
+    guardrail_selection = {
+        "tool": "standard_test_tool",
+        "params": {"val": "hello-cap"},
+        "rationale": "Matches request"
+    }
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(controller, "MAX_EXECUTED_STEPS", 1)
+
+        async with respx.mock(base_url="http://mock-llm/v1") as respx_mock:
+            respx_mock.post("/chat/completions").mock(side_effect=[
+                Response(200, json={"choices": [{"message": {"content": json.dumps(valid_plan)}}]}),
+                Response(200, json={"choices": [{"message": {"content": json.dumps(guardrail_selection)}}]}),
+                Response(200, json={"choices": [{"message": {"content": json.dumps(guardrail_selection)}}]}),
+                Response(200, json={"choices": [{"message": {"content": json.dumps(guardrail_selection)}}]})
+            ])
+
+            task_id = await controller.run_task("Execution cap")
+
+    assert controller.state == ControllerState.FAILED
+
+    archive_dir = controller_settings.working_storage_path / "archive"
+    archived = list(archive_dir.rglob("*failed_execute.json"))
+    assert len(archived) == 1
+    with open(archived[0], "r") as f:
+        archived_state = json.load(f)
+        assert archived_state["status"] == "FAILED"
+        assert archived_state["failure_cause"] == "execution_step_failed"
+        assert "MAX_EXECUTED_STEPS" in archived_state["error"]
+    assert task_id.startswith("task_")

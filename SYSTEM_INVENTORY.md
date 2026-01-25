@@ -21,6 +21,25 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Planning/Execution Step Bounds (MAX_PLANNED_STEPS / MAX_EXECUTED_STEPS)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_rejects_plan_exceeding_max_planned_steps tests/unit/test_ecf_controller.py::test_controller_fails_when_max_executed_steps_exceeded -q`
+    ```text
+    .                                                                                                               [100%]
+    2 passed in 1.27s
+    ```
+  - Notes: Planning fails fast with `failure_cause=planning_invalid` when `next_steps` exceeds the cap; execution fails with `failure_cause=execution_step_failed` only when work remains (cap checked after empty `next_steps` guard). Defaults are 100; tests monkeypatch the limits.
+
+- **Supervisor Watchdog Policy (Resume IN_PROGRESS Only)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/agentic/test_supervisor_watchdog_resume.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_supervisor_watchdog_resume.py -q`
+    ```text
+    1 passed in 1.65s
+    ```
+  - Notes: `supervisor_resume_stalled_tasks` deterministically resumes only ACTIVE tasks that are stalled (no `current_step`) and already in `IN_PROGRESS`; it skips `CREATED` tasks (never started) to keep the watchdog recovery-oriented.
+
 - **Typed Task Failure Causes (failure_cause + error in task artifacts)**
   - State: Verified
   - Location: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`

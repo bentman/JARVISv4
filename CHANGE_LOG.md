@@ -13,6 +13,23 @@
 
 ## Entries
 
+- 2026-01-24 18:48
+  - Summary: Added deterministic max-step guardrails for planning/execution (bounded by constants) while reusing existing failure causes for early, explicit failures.
+  - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_ecf_controller.py::test_controller_rejects_plan_exceeding_max_planned_steps tests/unit/test_ecf_controller.py::test_controller_fails_when_max_executed_steps_exceeded -q`
+    ```text
+    .                                                                                                               [100%]
+    2 passed in 1.27s
+    ```
+
+- 2026-01-24 18:27
+  - Summary: Tightened supervisor watchdog policy to resume only ACTIVE stalled tasks in IN_PROGRESS status (skipping CREATED tasks that never started).
+  - Scope: `backend/core/controller.py`, `tests/agentic/test_supervisor_watchdog_resume.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/agentic/test_supervisor_watchdog_resume.py -q`
+    ```text
+    1 passed in 1.65s
+    ```
+
 - 2026-01-24 17:32
   - Summary: Persisted coarse typed task failure causes (`failure_cause`) and ensured `error` is recorded on all FAILED task archival paths.
   - Scope: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
