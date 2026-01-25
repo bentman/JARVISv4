@@ -21,6 +21,15 @@ Entries represent reported validations at a point in time and may require re-val
 
 ## Inventory
 
+- **Multi-Task Orchestration (Analytics-Driven Termination)**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/agentic/test_ecf_core_flow.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_ecf_core_flow.py::test_orchestrate_task_batch_terminates_on_failure_via_analytics -q`
+    ```text
+    1 passed in 1.59s
+    ```
+  - Notes: Runs a bounded batch of sequential tasks using deterministic `text_output` execution and stops on the first failure observed via `summarize_task_outcomes()`; test proves mixed outcomes (COMPLETED + FAILED) and no dangling ACTIVE task artifacts.
+
 - **Planning/Execution Step Bounds (MAX_PLANNED_STEPS / MAX_EXECUTED_STEPS)**
   - State: Verified
   - Location: `backend/core/controller.py`, `tests/unit/test_ecf_controller.py`
