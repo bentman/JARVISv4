@@ -15,6 +15,19 @@
 
 ## Entries
 
+- 2026-01-26 08:25
+  - Summary: Added voice runtime execution plumbing with subprocess-based whisper (STT) and piper (TTS) execution, structured result capture, and comprehensive error handling
+  - Scope: `backend/core/voice/runtime.py`, `backend/core/voice/__init__.py`, `tests/unit/test_voice_runtime.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_voice_runtime.py -v`
+    ```text
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_whisper_help
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_piper_help
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_whisper_with_test_wav
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_missing_audio_file
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_tts_real_execution_deferred
+    ```
+  - Notes: Phase B1 voice execution plumbing validated via targeted pytest; `test_backend_main_execution` currently fails due to missing `LLM_BASE_URL` environment variable (pre-existing environment/config issue, out of scope for B1)
+
 - 2026-01-25 21:38
   - Summary: Added `backend/Dockerfile` and updated `docker-compose.yml` to establish hardened prod container capability for voice binaries (whisper.cpp, piper)
   - Scope: `backend/Dockerfile`, `docker-compose.yml`

@@ -18,6 +18,19 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Voice Runtime Execution Plumbing**
+  - State: Verified
+  - Location: `backend/core/voice/runtime.py`, `tests/unit/test_voice_runtime.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/unit/test_voice_runtime.py -v`
+    ```text
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_whisper_help
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_piper_help
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_whisper_with_test_wav
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_missing_audio_file
+    ✓ PASS: tests.unit.test_voice_runtime.TestVoiceRuntime::test_tts_real_execution_deferred
+    ```
+  - Notes: Minimal subprocess-based execution of whisper (STT) and piper (TTS) binaries with structured result capture and comprehensive error handling.
+
 - **Prod Voice Container Substrate**
   - State: Verified
   - Location: `backend/Dockerfile`, `docker-compose.yml`
