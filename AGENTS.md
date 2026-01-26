@@ -47,12 +47,25 @@ Follow `Project.md` Section 2 for the repo tree. Key anchors:
 
 ## 5 Python environment isolation (high priority)
 
-- All Python execution for this repo uses the project venv at `backend/.venv`.
-- Do not use or modify the User’s global Python environment.
-- Do not install packages globally. No `pip install` outside `backend/.venv`.
-- Dependency source of truth is `backend/requirements.txt`.
-  - Any dependency change must update `backend/requirements.txt` in the same mini-phase (or stop at proposal-only first if risk is non-trivial).
-- If `backend/.venv` does not exist or is broken, stop and propose the minimal create/repair steps before proceeding.
+- Python Environment
+  - Use `backend/.venv` only to execute Python commands (`backend/.venv/Scripts/python <cmd>`).
+  - Respect User's global Python environment; Never use or install packages globally.
+- Dependencies
+  - Single source of truth: `backend/requirements.txt`.
+  - Any dependency change updates that file in the same mini‑phase.
+  - If the venv is missing or broken, stop and propose minimal repair steps.
+- Harnesses
+  - Use existing harnesses only:
+    - `scripts/validate_backend.py`
+    - `tests/unit`, `tests/integration`, `tests/agentic`
+  - Do not invent new scripts or validators unless explicitly requested.
+- Validation Behavior
+  - Warnings are backlog unless they break correctness, CI, or user‑visible behavior.
+  - Report pass/fail with the exact command and minimal proof excerpt.
+  - For slow validation, run the smallest targeted test first.
+- Host vs Docker
+  - Host runs may skip due to missing system deps; note skips briefly.
+  - Full end‑to‑end/container validation belongs in Docker; don’t force host parity.
 
 ## 6 Default workflow (mini-phase, evidence-gated)
 
