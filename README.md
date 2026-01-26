@@ -1,7 +1,7 @@
 # JARVISv4 (Just A Rather Very Intelligent System)
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)](#)
+[![Status: Active-Reference](https://img.shields.io/badge/status-Active-Reference-yellow)](#)
 
 A Local-First AI Assistant based on Explicit Cognition Framework (ECF)
 
