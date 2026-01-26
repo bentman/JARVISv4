@@ -1,6 +1,6 @@
 # CHANGE_LOG.md
 
-## Instructions
+## Rules
 - Append-only record of reported work; corrections may be appended to entries.
 - Write an entry only after the mini-phase objective is “done” and supported by evidence.
 - No edits/reorders/deletes of past entries. If an entry is wrong, append a corrective entry.
@@ -14,6 +14,24 @@
 - If a change is reverted, append a new entry describing the revert and why.
 
 ## Entries
+
+- 2026-01-25 21:38
+  - Summary: Added `backend/Dockerfile` and updated `docker-compose.yml` to establish hardened prod container capability for voice binaries (whisper.cpp, piper)
+  - Scope: `backend/Dockerfile`, `docker-compose.yml`
+  - Evidence: `docker compose -f docker-compose.yml build backend` + `docker compose -f docker-compose.yml run --rm backend whisper --help` + `docker compose -f docker-compose.yml run --rm backend piper --help`
+    ```text
+    usage: whisper [options] file0 file1 ...
+    usage: piper [options]
+    ```
+
+- 2026-01-25 19:47
+  - Summary: Added `backend/Dockerfile.dev` and updated `docker-compose.dev.yml` to establish dev container capability for voice binaries (whisper.cpp, piper)
+  - Scope: `backend/Dockerfile.dev`, `docker-compose.dev.yml`
+  - Evidence: `docker compose -f docker-compose.dev.yml build backend` + `docker compose -f docker-compose.dev.yml run --rm backend whisper --help` + `docker compose -f docker-compose.dev.yml run --rm backend piper --help`
+    ```text
+    usage: whisper [options] file0 file1 ...
+    usage: piper [options]
+    ```
 
 - 2026-01-25 07:44
   - Summary: Made task replay crash-consistent by repairing in-flight `current_step` artifacts via deterministic re-queue-on-resume, then proved end-to-end replay from on-disk artifacts only.

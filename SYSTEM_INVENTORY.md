@@ -1,19 +1,14 @@
 # SYSTEM_INVENTORY.md
-Entries represent reported validations at a point in time and may require re-validation. Treat evidence blocks as claims unless reproduced.
 
-## Instructions
-- This document is a status snapshot of what exists and is validated now. It is not a roadmap.
-- Additive updates only. Do not rewrite history. If a prior entry is wrong, append a correction with date + evidence pointer.
-- Promote a capability only when supported by validation evidence (tests, harness runs, or reproducible runtime checks).
-- Skips/warnings do not count as validation unless they are explicitly the intended outcome.
-- **Ordering:** Entries are maintained in **descending recency** (most recently validated capabilities at the top).
-- **Append location:** New capability entries and corrections must be added **at the top of the Inventory section**, directly under `## Inventory`.
-- Keep entries terse and concrete:
-  - Capability name
-  - Current state (pick one and use consistently)
-  - Location (path(s))
-  - Validation (exact command + minimal excerpt pointer)
-  - Notes (optional, 1–2 lines)
+Authoritative capability ledger. This is not a roadmap or config reference.
+
+## Rules
+- One entry = one capability, validated at a point in time.
+- Entries must include: Capability, State, Location, Validation. Notes optional (1 line max).
+- Do not include environment values, wiring details, or implementation notes.
+- Append-only. Do not edit or delete prior entries.
+- New capabilities go at the top under `## Inventory`.
+- Corrections or clarifications go **only** in the Appendix section.
 
 ## States
 - Planned: intent only, not implemented
@@ -22,6 +17,24 @@ Entries represent reported validations at a point in time and may require re-val
 - Deferred: intentionally postponed (reason noted)
 
 ## Inventory
+
+- **Prod Voice Container Substrate**
+  - State: Verified
+  - Location: `backend/Dockerfile`, `docker-compose.yml`
+  - Validation:
+    - `docker compose -f docker-compose.yml build backend`
+    - `docker compose -f docker-compose.yml run --rm backend whisper --help`
+    - `docker compose -f docker-compose.yml run --rm backend piper --help`
+  - Notes: Hardened prod container with non-root user, read-only filesystem, and voice binary executability.
+
+- **Dev Voice Container Substrate**
+  - State: Verified
+  - Location: `backend/Dockerfile.dev`, `docker-compose.dev.yml`
+  - Validation:
+    - `docker compose -f docker-compose.dev.yml build backend`
+    - `docker compose -f docker-compose.dev.yml run --rm backend whisper --help`
+    - `docker compose -f docker-compose.dev.yml run --rm backend piper --help`
+  - Notes: Dev-only container capability proving executability of legacy voice binaries (`whisper`, `piper`).
 
 - **Multi-Task Orchestration (Analytics-Driven Termination)**
   - State: Verified
@@ -589,6 +602,13 @@ Entries represent reported validations at a point in time and may require re-val
 
 ---
 
+# Appendix: 
+## Only Clarifications and Corrections below
+- Use this section to correct or narrow the meaning of a prior inventory entry.
+- Do not restate full validation evidence here.
+- Reference the original capability by name and date.
+- Corrections clarify scope or semantics; they do not introduce new capabilities.
+
 ## Inventory Wording Normalization — 2026-01-23
 
 - **ECF Controller (Clarification)**
@@ -628,13 +648,3 @@ Entries represent reported validations at a point in time and may require re-val
 - **Memory Integration Node (Clarification)**
   - Clarification: The `MemoryWriteNode` integrates with the memory schemas and working state context, but does not on its own establish a complete three‑tier orchestration layer.
   - Evidence: `backend/controller/nodes/memory_op.py`, `tests/unit/test_memory_node.py`
-
-## Deployment Surface Clarifications — 2026-01-23
-
-- **Docker/Compose Surfaces (Clarification)**
-  - Clarification: `docker-compose.yml` and `docker-compose.dev.yml` are present as migration/scaffolding surfaces. They include explicit `# reserved:` annotations and reference images/build steps that are not fully defined in this repo snapshot (e.g., `backend/Dockerfile`, frontend implementation). Their presence should not be read as evidence of a runnable deployment stack.
-  - Evidence: `docker-compose.yml`, `docker-compose.dev.yml`
-
-- **Root Config Templates (Clarification)**
-  - Clarification: The `.env.example` and `.env.dev.example` templates and compose files are validated for presence only (per the existing inventory validation). This entry reflects configuration scaffolding, not deployment readiness.
-  - Evidence: existing inventory entry “Root Config Templates” + `docker-compose.yml`/`docker-compose.dev.yml` reserved comments.

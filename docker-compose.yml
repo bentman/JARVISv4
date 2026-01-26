@@ -3,25 +3,33 @@
 
 services:
   backend:
-    # reserved: requires backend/Dockerfile
-    # build:
-    #   context: ./backend
-    #   dockerfile: Dockerfile
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: jarvisv4-backend
     ports:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4.db
       - REDIS_URL=redis://redis:6379/0
+      - MODEL_PATH=/models
+      - LD_LIBRARY_PATH=/usr/local/lib:/opt/whisper/bin:/opt/whisper/lib:/opt/whisper/src:/opt/llama/lib:/opt/llama/bin:/opt/piper_build/pi/lib:/usr/local/bin
     volumes:
-      - jarvis_data:/app/data # reserved: pending volume setup
+      - jarvis_data:/app/data
+      - ./models:/models:ro
     depends_on:
       - redis
     networks:
       - JARVISv4_network
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
 
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     networks:

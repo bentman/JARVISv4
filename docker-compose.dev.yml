@@ -3,10 +3,9 @@
 
 services:
   backend:
-    # reserved: requires backend/Dockerfile
-    # build:
-    #   context: ./backend
-    #   dockerfile: Dockerfile
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
     image: jarvisv4-backend-dev
     ports:
       - "8000:8000"
@@ -14,8 +13,11 @@ services:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4_dev.db
       - REDIS_URL=redis://redis:6379/0
       - LOG_LEVEL=DEBUG
+      - MODEL_PATH=/models
+      - LD_LIBRARY_PATH=/usr/local/lib:/opt/whisper/bin:/opt/whisper/lib:/opt/whisper/src:/opt/llama/lib:/opt/llama/bin:/opt/piper_build/pi/lib:/usr/local/bin
     volumes:
       - ./backend:/app # reserved: sync logic pending
+      - ./models:/models
     depends_on:
       - redis
     networks:
@@ -23,6 +25,7 @@ services:
 
   redis:
     image: redis:7-alpine
+    command: redis-server --appendonly no
     ports:
       - "6379:6379"
     networks:
