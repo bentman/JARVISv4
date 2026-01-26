@@ -1,9 +1,9 @@
 # JARVISv4 (Just A Rather Very Intelligent System)
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Status: Active](https://img.shields.io/badge/Status-Active-green.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A local-first explicit cognition framework.
+A Local-First AI Assistant based on Explicit Cognition Framework (ECF)
 
 ## Description
 This project implements the **Explicit Cognition Framework (ECF)**, a local-first architecture designed to solve agentic drift. By demoting the LLM to a **stateless reasoning component** and enforcing **deterministic control** via a specialized Controller, JARVISv4 ensures reliability. All state is maintained in **externalized memory artifacts** (Working, Episodic, Semantic), and improvement is driven by **explicit weight learning** rather than context accumulation.
