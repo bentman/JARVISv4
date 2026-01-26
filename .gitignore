@@ -110,22 +110,33 @@ checkpoints/
 !.env.dev.example
 
 # Large Models
-models/*
 !models/.gitkeep
-*.gguf
-*.bin
-*.pt
-*.safetensors
+!models/.md
+models/*.gguf
+models/*.bin
+models/*.pt
+models/*.safetensors
+models/*.onnx
+models/*.tflite
+# Unsure of these folders yet (TBD)
+models/adapters/*
+models/adapters/candidate/*
+models/adapters/production/*
+models/adapters/versions/*
 
-# Logs
+# Logs, Err & Reports
+reports/*.txt
+!reports/*.md
 logs/
+!logs/*.md
 *.log
 *.err
 
 # Databases
+data/*
+!data/*.md
 *.db
 *.sqlite3
-data/
 
 # Agents
 .aider*
