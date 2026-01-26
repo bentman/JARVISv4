@@ -1,10 +1,12 @@
-# J.A.R.V.I.S. (Just A Rather Very Intelligent System)
-## AI Local Assistant (JARVISv4)
+# J.A.R.V.I.S. AI Local Assistant (JARVISv4)
+## Just A Reimagined Version In Stabilization
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: Active](https://img.shields.io/badge/Status-Active-green)](#)
 
-A Local-First AI Assistant based on Explicit Cognition Framework (ECF)
+- A Local-First AI Assistant based on Explicit Cognition Framework (ECF)
+- On its way to become the refined, engineered evolution. 
+- Role‑separated, disciplined, and built for long‑term growth.
 
 ## Description
 This project implements the **Explicit Cognition Framework (ECF)**, a local-first architecture designed to solve agentic drift. By demoting the LLM to a **stateless reasoning component** and enforcing **deterministic control** via a specialized Controller, JARVISv4 ensures reliability. All state is maintained in **externalized memory artifacts** (Working, Episodic, Semantic), and improvement is driven by **explicit weight learning** rather than context accumulation.
