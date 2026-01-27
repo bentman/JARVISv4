@@ -15,6 +15,23 @@
 
 ## Entries
 
+- 2026-01-26 19:55
+  - Summary: Added ECF-facing voice tool integration with ToolRegistry-compatible voice_stt and voice_tts tools that wrap Phase B1 runtime
+  - Scope: `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_voice_tool.py -v`
+    ```text
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_stt_tool_registration
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_tts_tool_registration
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_stt_execution_with_test_wav
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_tts_help_execution
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_stt_missing_file
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_voice_stt_invalid_parameter
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_tool_registry_call_voice_stt
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_tool_registry_call_voice_tts
+    ✓ PASS: tests.unit.test_voice_tool.TestVoiceTools::test_tool_registry_parameter_validation
+    ```
+  - Notes: Phase B2 voice tool integration provides deterministic, artifact-friendly voice tools for ECF agentic system with JSON schema validation and structured result returns
+
 - 2026-01-26 08:25
   - Summary: Added voice runtime execution plumbing with subprocess-based whisper (STT) and piper (TTS) execution, structured result capture, and comprehensive error handling
   - Scope: `backend/core/voice/runtime.py`, `backend/core/voice/__init__.py`, `tests/unit/test_voice_runtime.py`
