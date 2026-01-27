@@ -15,6 +15,36 @@
 
 ## Entries
 
+- 2026-01-27 04:42
+  - Summary: Integrated `voice_stt` and `voice_tts` into the `ECFController` execution flow and validated via deterministic agentic test (injecting plan + fake LLM).
+  - Scope: `backend/core/controller.py`, `tests/agentic/test_deterministic_voice_tools.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest -s tests/agentic/test_deterministic_voice_tools.py`
+    ```text
+    tests\agentic\test_deterministic_voice_tools.py
+    [Evidence] Completed Steps: [
+      {
+        "index": 0,
+        "description": "Execute voice STT on tests/test.wav",
+        "tool_name": "voice_stt",
+        "tool_params": {
+          "audio_file_path": "tests/test.wav"
+        },
+        ...
+      },
+      {
+        "index": 1,
+        "description": "Execute voice TTS with help",
+        "tool_name": "voice_tts",
+        "tool_params": {
+          "text": "--help"
+        },
+        ...
+      }
+    ]
+    .
+    1 passed in 0.86s
+    ```
+
 - 2026-01-26 19:55
   - Summary: Added ECF-facing voice tool integration with ToolRegistry-compatible voice_stt and voice_tts tools that wrap Phase B1 runtime
   - Scope: `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`

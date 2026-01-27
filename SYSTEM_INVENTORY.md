@@ -18,6 +18,12 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Voice Invocation in Agent Execution Flow**
+  - State: Verified
+  - Location: `backend/core/controller.py`, `tests/agentic/test_deterministic_voice_tools.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest tests/agentic/test_deterministic_voice_tools.py -q`
+  - Notes: Registers `voice_stt` and `voice_tts` in the `ECFController` tool registry and validates their invocation via a deterministic execution path with injected plans and mocked LLM logic.
+
 - **Voice Tool Integration (ECF)**
   - State: Verified
   - Location: `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`

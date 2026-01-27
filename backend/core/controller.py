@@ -14,6 +14,7 @@ from backend.agents.executor.executor import ExecutorAgent, EXECUTOR_SYSTEM_PROM
 from backend.tools.registry.registry import ToolRegistry
 from backend.tools.web_search import WebSearchTool
 from backend.tools.text_output import TextOutputTool
+from backend.tools.voice import VoiceSTTTool, VoiceTTSTool
 from backend.memory.stores.trace_store import TraceStore
 
 logger = logging.getLogger(__name__)
@@ -70,6 +71,8 @@ class ECFController:
         # Register Default Tools
         self.registry.register_tool(WebSearchTool(self.settings))
         self.registry.register_tool(TextOutputTool())
+        self.registry.register_tool(VoiceSTTTool())
+        self.registry.register_tool(VoiceTTSTool())
         
         logger.info("ECFController initialized and READY.")
 

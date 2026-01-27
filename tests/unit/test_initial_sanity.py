@@ -12,6 +12,10 @@ def test_backend_main_execution():
     env = os.environ.copy()
     env["PYTHONPATH"] = str(repo_root)
     
+    # Pass through LLM settings to satisfy config requirements in main.py
+    env["LLM_BASE_URL"] = os.environ.get("LLM_BASE_URL", "http://localhost:11434/v1")
+    env["LLM_MODEL"] = os.environ.get("LLM_MODEL", "llama3.1:8b")
+
     result = subprocess.run(
         [sys.executable, str(main_script)],
         capture_output=True,
