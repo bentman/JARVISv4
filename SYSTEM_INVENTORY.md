@@ -18,6 +18,14 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Docker E2E Voice Invocation**
+  - State: Verified
+  - Location: `docker-compose.dev.yml`, `docker-compose.yml`, `tests/agentic/test_deterministic_voice_tools.py`
+  - Validation:
+    - `docker compose -f docker-compose.dev.yml run --rm validate-voice`
+    - `docker compose -f docker-compose.yml run --rm validate-voice`
+  - Notes: Deterministic voice invocation validated inside dev and hardened prod containers.
+
 - **Voice Invocation in Agent Execution Flow**
   - State: Verified
   - Location: `backend/core/controller.py`, `tests/agentic/test_deterministic_voice_tools.py`

@@ -97,3 +97,4 @@ async def test_deterministic_voice_execution(tmp_path, monkeypatch):
     tts_artifact = tts_step.get("artifact")
     assert tts_artifact is not None
 
+

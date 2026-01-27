@@ -15,6 +15,15 @@
 
 ## Entries
 
+- 2026-01-27 11:00
+  - Summary: Docker E2E validation of deterministic voice invocation (dev + prod).
+  - Scope: `docker-compose.dev.yml`, `docker-compose.yml`, `tests/agentic/test_deterministic_voice_tools.py`
+  - Evidence: `docker compose -f docker-compose.dev.yml run --rm validate-voice` + `docker compose -f docker-compose.yml run --rm validate-voice`
+    ```text
+    tests\agentic\test_deterministic_voice_tools.py . [100%]
+    1 passed in 0.55s
+    ```
+
 - 2026-01-27 04:42
   - Summary: Integrated `voice_stt` and `voice_tts` into the `ECFController` execution flow and validated via deterministic agentic test (injecting plan + fake LLM).
   - Scope: `backend/core/controller.py`, `tests/agentic/test_deterministic_voice_tools.py`
