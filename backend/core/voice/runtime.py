@@ -99,7 +99,52 @@ def run_stt(audio_file_path: str, model: str = "base", **kwargs) -> Dict[str, An
             "stderr": f"Audio file not found: {audio_file_path}",
             "return_code": -4,
             "duration_ms": 0.0,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "mode": "stt",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "model": model,
+                "language": kwargs.get("language")
+            },
+            "artifacts": {
+                "transcript_text": "",
+                "transcript_path": None
+            }
+        }
+
+    # Check model presence (V4 Contract)
+    model_base = os.environ.get("MODEL_PATH", "/models")
+    model_filename = f"ggml-{model}.bin"
+    model_required = os.path.join(model_base, model_filename)
+    model_found = os.path.exists(model_required)
+    
+    contract_extras = {
+        "model_base_path": model_base,
+        "model_required": model_required,
+        "model_found": model_found,
+        "model_error": None if model_found else f"Model file not found: {model_required}"
+    }
+
+    if not model_found:
+        return {
+            "success": False,
+            "command": [],
+            "stdout": "",
+            "stderr": contract_extras["model_error"],
+            "return_code": -6,
+            "duration_ms": 0.0,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "stt",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "model": model,
+                "language": kwargs.get("language")
+            },
+            "artifacts": {
+                "transcript_text": "",
+                "transcript_path": None,
+                **contract_extras
+            }
         }
 
     # Build whisper command
@@ -110,7 +155,22 @@ def run_stt(audio_file_path: str, model: str = "base", **kwargs) -> Dict[str, An
         if value is not None and value != "":
             command.extend([f"--{key}", str(value)])
 
-    return _run_command(command)
+    result = _run_command(command)
+    
+    # Enforce Phase B7 Contract
+    result["mode"] = "stt"
+    result["input"] = {
+        "audio_file_path": audio_file_path,
+        "model": model,
+        "language": kwargs.get("language")
+    }
+    result["artifacts"] = {
+        "transcript_text": "", # Deterministic empty string for now
+        "transcript_path": None,
+        **contract_extras
+    }
+    
+    return result
 
 def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None, **kwargs) -> Dict[str, Any]:
     """
@@ -137,9 +197,24 @@ def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None
             "stderr": "TTS real execution deferred to future phase",
             "return_code": -5,
             "duration_ms": 0.0,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "mode": "tts",
+            "input": {"text": text, "voice": voice},
+            "artifacts": {"audio_path": None}
         }
 
     command = ["piper", text]
 
-    return _run_command(command)
+    result = _run_command(command)
+    
+    # Enforce Phase B7 Contract
+    result["mode"] = "tts"
+    result["input"] = {
+        "text": text,
+        "voice": voice
+    }
+    result["artifacts"] = {
+        "audio_path": output_file
+    }
+    
+    return result

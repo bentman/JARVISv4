@@ -15,6 +15,24 @@
 
 ## Entries
 
+- 2026-01-27 18:50
+  - Summary: Implemented deterministic Whisper model presence contract with preflight checks and structured artifact reporting.
+  - Scope: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest -q tests/unit/test_voice_tool.py -rs`
+    ```text
+    ...........
+    11 passed in 0.15s
+    ```
+
+- 2026-01-27 18:00
+  - Summary: Implemented and validated deterministic artifact contract for voice tools (STT/TTS).
+  - Scope: `backend/core/voice/runtime.py`, `tests/unit/test_voice_tool.py`
+  - Evidence: `backend/.venv/Scripts/python -m pytest -q tests/unit/test_voice_runtime.py tests/unit/test_voice_tool.py -rs`
+    ```text
+    ...............
+    15 passed in 0.16s
+    ```
+
 - 2026-01-27 11:00
   - Summary: Docker E2E validation of deterministic voice invocation (dev + prod).
   - Scope: `docker-compose.dev.yml`, `docker-compose.yml`, `tests/agentic/test_deterministic_voice_tools.py`

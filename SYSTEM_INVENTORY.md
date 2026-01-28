@@ -18,6 +18,18 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Whisper Model Presence Contract (STT)**
+  - State: Verified
+  - Location: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest -q tests/unit/test_voice_tool.py -rs`
+  - Notes: Deterministic preflight model check with explicit artifact fields (`model_found`, `model_required`, `model_error`).
+
+- **Voice Artifact Contract (STT/TTS I/O)**
+  - State: Verified
+  - Location: `backend/core/voice/runtime.py`, `tests/unit/test_voice_tool.py`
+  - Validation: `backend/.venv/Scripts/python -m pytest -q tests/unit/test_voice_runtime.py tests/unit/test_voice_tool.py -rs`
+  - Notes: Runtime now returns deterministic structured payloads with `mode`, `input`, and `artifacts` keys for both STT (transcript_text) and TTS (audio_path) operations.
+
 - **Docker E2E Voice Invocation**
   - State: Verified
   - Location: `docker-compose.dev.yml`, `docker-compose.yml`, `tests/agentic/test_deterministic_voice_tools.py`

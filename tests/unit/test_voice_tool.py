@@ -163,3 +163,57 @@ class TestVoiceTools:
         # Test invalid parameter type
         with pytest.raises(ToolParameterValidationError):
             await registry.call_tool("voice_stt", audio_file_path=123)
+
+    @pytest.mark.asyncio
+    async def test_voice_tool_contract_compliance(self):
+        """Test that voice tools return the required contract fields."""
+        # Test STT Contract
+        stt_tool = VoiceSTTTool()
+        # We test with missing file to ensure contract holds even on failure
+        stt_result = await stt_tool.execute(audio_file_path="nonexistent.wav")
+        
+        assert "mode" in stt_result
+        assert stt_result["mode"] == "stt"
+        assert "input" in stt_result
+        assert stt_result["input"]["audio_file_path"] == "nonexistent.wav"
+        assert "artifacts" in stt_result
+        assert "transcript_text" in stt_result["artifacts"]
+        assert stt_result["artifacts"]["transcript_text"] == ""
+        
+        # Test TTS Contract
+        tts_tool = VoiceTTSTool()
+        tts_result = await tts_tool.execute(text="--help")
+        
+        assert "mode" in tts_result
+        assert tts_result["mode"] == "tts"
+        assert "input" in tts_result
+        assert tts_result["input"]["text"] == "--help"
+        assert "artifacts" in tts_result
+        assert "audio_path" in tts_result["artifacts"]
+        assert tts_result["artifacts"]["audio_path"] is None
+
+    @pytest.mark.asyncio
+    async def test_voice_stt_model_missing_contract(self, monkeypatch, tmp_path):
+        """Test voice_stt tool contract when model file is missing."""
+        # Force model search path to a temp dir (guaranteed empty)
+        monkeypatch.setenv("MODEL_PATH", str(tmp_path))
+        
+        test_wav_path = os.path.join("tests", "test.wav")
+        if not os.path.exists(test_wav_path):
+            pytest.skip("test.wav fixture not available")
+
+        tool = VoiceSTTTool()
+        # Use "base" model which should look for ggml-base.bin in tmp_path
+        result = await tool.execute(audio_file_path=test_wav_path, model="base")
+
+        assert result["success"] is False
+        assert result["return_code"] == -6
+        assert "Model file not found" in result["stderr"]
+        
+        # Verify contract fields
+        assert "artifacts" in result
+        artifacts = result["artifacts"]
+        assert artifacts["model_base_path"] == str(tmp_path)
+        assert artifacts["model_required"] == os.path.join(str(tmp_path), "ggml-base.bin")
+        assert artifacts["model_found"] is False
+        assert "Model file not found" in artifacts["model_error"]
