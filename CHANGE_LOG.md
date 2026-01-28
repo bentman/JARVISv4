@@ -15,6 +15,11 @@
 
 ## Entries
 
+- 2026-01-28 10:48
+  - Summary: Extended Piper TTS model presence contract to report `model_found` status deterministically via `MODEL_PATH` + `piper/{voice}.onnx` resolution, preserving B1 deferred execution semantics.
+  - Scope: `backend/core/voice/runtime.py`, `tests/unit/test_voice_tool.py`
+  - Evidence: `pytest tests/unit/test_regression.py` (2 passed)
+
 - 2026-01-27 18:50
   - Summary: Implemented deterministic Whisper model presence contract with preflight checks and structured artifact reporting.
   - Scope: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`

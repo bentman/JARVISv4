@@ -188,7 +188,36 @@ def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None
     # Build piper command
     command = ["piper", "--model", voice, "--output_file", output_file] if output_file else ["piper", "--model", voice]
 
+    # Check model presence (V4 Contract for Piper)
+    model_base = os.environ.get("MODEL_PATH", "/models")
+    
+    # Piper Resolution Logic:
+    # 1. If 'voice' looks like an explicit path (exists, absolute, has separators, or .onnx extension), use it.
+    # 2. Otherwise, resolve as {MODEL_PATH}/piper/{voice}.onnx
+    is_explicit_path = (
+        os.path.exists(voice) or 
+        os.path.isabs(voice) or 
+        os.sep in voice or 
+        (os.altsep and os.altsep in voice) or
+        voice.endswith(".onnx")
+    )
+    
+    if is_explicit_path:
+        model_required = voice
+    else:
+        model_required = os.path.join(model_base, "piper", f"{voice}.onnx")
+    
+    model_found = os.path.exists(model_required)
+    
+    contract_extras = {
+        "model_base_path": model_base,
+        "model_required": model_required,
+        "model_found": model_found,
+        "model_error": None if model_found else f"Model file not found: {model_required}"
+    }
+
     # For B1, we only support --help execution
+    # This takes precedence over model check failures to preserve B1 regression behavior
     if text != "--help":
         return {
             "success": False,
@@ -200,21 +229,32 @@ def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None
             "timestamp": datetime.now().isoformat(),
             "mode": "tts",
             "input": {"text": text, "voice": voice},
-            "artifacts": {"audio_path": None}
+            "artifacts": {
+                "audio_path": None,
+                **contract_extras
+            }
         }
 
+    # If we are here, text == "--help".
+    # In help mode, we don't strictly need the model, but we should use the resolved path if we were to run real TTS.
+    # However, 'piper --help' doesn't take model args usually, but let's stick to the contract logic.
+    # Actually, B2/B3 established 'piper text' as the command pattern for help mode? 
+    # Looking at B2 code: command = ["piper", text] where text="--help".
+    # So model is not involved in the help command itself.
+    
     command = ["piper", text]
 
     result = _run_command(command)
     
-    # Enforce Phase B7 Contract
+    # Enforce Phase B7/B9 Contract
     result["mode"] = "tts"
     result["input"] = {
         "text": text,
         "voice": voice
     }
     result["artifacts"] = {
-        "audio_path": output_file
+        "audio_path": output_file,
+        **contract_extras
     }
     
     return result

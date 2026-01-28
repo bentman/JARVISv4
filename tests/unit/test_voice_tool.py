@@ -217,3 +217,47 @@ class TestVoiceTools:
         assert artifacts["model_required"] == os.path.join(str(tmp_path), "ggml-base.bin")
         assert artifacts["model_found"] is False
         assert "Model file not found" in artifacts["model_error"]
+
+    @pytest.mark.asyncio
+    async def test_voice_tts_model_missing_contract(self, monkeypatch, tmp_path):
+        """Test voice_tts tool contract when model file is missing (by ID resolution)."""
+        monkeypatch.setenv("MODEL_PATH", str(tmp_path))
+        
+        tool = VoiceTTSTool()
+        # Use "test-voice" which should resolve to {tmp_path}/piper/test-voice.onnx
+        result = await tool.execute(text="Hello", voice="test-voice")
+        
+        assert result["success"] is False
+        # Expect -5 (Deferred) instead of -6 (Model Missing) because B1 deferred behavior takes precedence
+        assert result["return_code"] == -5
+        assert "TTS real execution deferred" in result["stderr"]
+        
+        # Verify contract fields are still present and correct despite deferred execution
+        assert "artifacts" in result
+        artifacts = result["artifacts"]
+        assert artifacts["model_base_path"] == str(tmp_path)
+        # Check expected resolution path structure
+        expected_path = os.path.join(str(tmp_path), "piper", "test-voice.onnx")
+        assert artifacts["model_required"] == expected_path
+        assert artifacts["model_found"] is False
+
+    @pytest.mark.asyncio
+    async def test_voice_tts_model_explicit_path_missing(self, monkeypatch, tmp_path):
+        """Test voice_tts tool contract when explicit model path is missing."""
+        monkeypatch.setenv("MODEL_PATH", str(tmp_path))
+        
+        explicit_path = os.path.join(str(tmp_path), "custom_model.onnx")
+        
+        tool = VoiceTTSTool()
+        result = await tool.execute(text="Hello", voice=explicit_path)
+        
+        assert result["success"] is False
+        # Expect -5 (Deferred) instead of -6 (Model Missing) because B1 deferred behavior takes precedence
+        assert result["return_code"] == -5
+        assert "TTS real execution deferred" in result["stderr"]
+        
+        assert "artifacts" in result
+        artifacts = result["artifacts"]
+        # When explicit path provided, it should be used as-is
+        assert artifacts["model_required"] == explicit_path
+        assert artifacts["model_found"] is False

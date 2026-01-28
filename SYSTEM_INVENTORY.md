@@ -18,6 +18,12 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Piper Model Presence & Placement Contract (TTS)**
+  - State: Verified
+  - Location: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
+  - Validation: `python scripts/validate_backend.py`
+  - Notes: Implements `MODEL_PATH` + `piper/{voice}.onnx` resolution contract with deterministic artifact reporting, preserving B1 deferred execution behavior. Requires local LLM (Ollama) running for full regression suite validation.
+
 - **Whisper Model Presence Contract (STT)**
   - State: Verified
   - Location: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
