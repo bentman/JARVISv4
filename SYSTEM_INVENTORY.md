@@ -18,6 +18,12 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Controller executes plans via WorkflowEngine
+  - **State**: Verified
+  - **Location**: `backend/core/controller.py`, `backend/controller/engine/engine.py`
+  - **Validation**: `python scripts/validate_backend.py`
+  - **Notes**: New integration test file `tests/integration/test_controller_workflow_integration.py` proves deterministic output and error handling when controller uses WorkflowEngine for step execution
+
 - **Capability**: Enhanced WorkflowEngine with v3 execution logic
   - **State**: Verified
   - **Location**: `backend/controller/engine/engine.py`

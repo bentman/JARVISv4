@@ -15,6 +15,16 @@
 
 ## Entries
 
+- 2026-01-28 19:00
+  - Summary: Controller execution path now uses WorkflowEngine.execute_workflow() via SimpleToolNode bridge
+  - Scope: `backend/core/controller.py`, `tests/integration/test_controller_workflow_integration.py`
+  - Evidence: `python scripts/validate_backend.py` (Integration: 3/3 PASS)
+    ```text
+    ✓ PASS: tests.integration.test_controller_workflow_integration::test_controller_workflow_engine_integration
+    ✓ PASS: tests.integration.test_controller_workflow_integration::test_controller_workflow_engine_deterministic_output
+    ✓ PASS: tests.integration.test_controller_workflow_integration::test_controller_workflow_engine_error_handling
+    ```
+
 - 2026-01-28 15:11
   - Summary: Enhanced WorkflowEngine with v3 execution logic and comprehensive test coverage
   - Scope: `backend/controller/engine/engine.py`, `tests/unit/test_workflow_engine.py`, `tests/unit/test_controller.py`, `SYSTEM_INVENTORY.md`

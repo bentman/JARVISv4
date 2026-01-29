@@ -16,8 +16,46 @@ from backend.tools.web_search import WebSearchTool
 from backend.tools.text_output import TextOutputTool
 from backend.tools.voice import VoiceSTTTool, VoiceTTSTool
 from backend.memory.stores.trace_store import TraceStore
+from backend.controller.engine.engine import WorkflowEngine
+from backend.controller.engine.types import TaskContext, NodeType
+from backend.controller.nodes.base import BaseNode
 
 logger = logging.getLogger(__name__)
+
+class SimpleToolNode(BaseNode):
+    """Simple node that executes a single tool with predefined parameters."""
+    
+    def __init__(self, id: str, description: str, tool_name: str, tool_params: dict, registry: ToolRegistry):
+        super().__init__(id, NodeType.ROUTER, description)  # Use ROUTER type for tool execution
+        self.tool_name = tool_name
+        self.tool_params = tool_params
+        self.registry = registry
+    
+    async def execute(self, context: TaskContext, results: dict) -> dict:
+        """Execute the tool and return the result."""
+        tool = self.registry.get_tool(self.tool_name)
+        if not tool:
+            raise Exception(f"Tool {self.tool_name} not found in registry")
+        
+        # Execute the tool with the predefined parameters
+        try:
+            result = await tool.execute(**self.tool_params)
+            return {
+                "node_id": self.id,
+                "tool_name": self.tool_name,
+                "tool_params": self.tool_params,
+                "result": result,
+                "status": "SUCCESS"
+            }
+        except Exception as e:
+            return {
+                "node_id": self.id,
+                "tool_name": self.tool_name,
+                "tool_params": self.tool_params,
+                "result": None,
+                "status": "FAILED",
+                "error": str(e)
+            }
 
 class ControllerState(Enum):
     INITIALIZING = "INITIALIZING"
@@ -73,6 +111,9 @@ class ECFController:
         self.registry.register_tool(TextOutputTool())
         self.registry.register_tool(VoiceSTTTool())
         self.registry.register_tool(VoiceTTSTool())
+        
+        # Initialize Workflow Engine
+        self.workflow_engine = WorkflowEngine()
         
         logger.info("ECFController initialized and READY.")
 
@@ -241,96 +282,9 @@ class ECFController:
         return resumed
 
     async def _execute_remaining_steps(self, task_id: str, goal: str, max_steps: Optional[int] = None) -> int:
-        """Execute remaining steps for an existing task state."""
-        executed_steps = 0
-        while True:
-            task_state = self.state_manager.load_task(task_id)
-            next_steps = task_state.get("next_steps", [])
-            if not next_steps:
-                logger.info("No more steps in plan. Completion reached.")
-                break
-
-            if executed_steps >= self.MAX_EXECUTED_STEPS:
-                self.last_error = (
-                    f"Exceeded MAX_EXECUTED_STEPS={self.MAX_EXECUTED_STEPS}"
-                )
-                self.state_manager.update_task(task_id, {
-                    "status": "FAILED",
-                    "error": self.last_error,
-                    "failure_cause": "execution_step_failed"
-                })
-                self.state_manager.archive_task(task_id, reason="failed_execute")
-                self.state = ControllerState.FAILED
-                break
-
-            if max_steps is not None and executed_steps >= max_steps:
-                logger.info("Max steps reached; halting execution loop.")
-                break
-
-            current_step = next_steps[0]
-            step_index = len(task_state.get("completed_steps", []))
-
-            self.state_manager.update_task(task_id, {
-                "current_step": {
-                    "index": step_index,
-                    "description": current_step["description"]
-                },
-                "next_steps": next_steps[1:]
-            })
-
-            logger.info(f"Executing Step {step_index}: {current_step['description']}")
-            self.trace_store.append_decision(
-                task_id,
-                "step_started",
-                {"step_index": step_index, "description": current_step["description"]}
-            )
-
-            outcome = await self.executor.execute_step(
-                current_step["description"],
-                context={"task_id": task_id, "goal": goal}
-            )
-            self.trace_store.append_tool_call(
-                task_id=task_id,
-                step_index=step_index,
-                tool_name=outcome.get("tool"),
-                params=outcome.get("params", {}),
-                status=outcome.get("status", "FAILED"),
-                result=str(outcome.get("result")) if outcome.get("result") is not None else None,
-                error=outcome.get("error")
-            )
-            self.trace_store.append_validation(
-                task_id,
-                "step_execution",
-                "PASS" if outcome.get("status") == "SUCCESS" else "FAIL",
-                {
-                    "step_index": step_index,
-                    "tool": outcome.get("tool"),
-                    "error": outcome.get("error")
-                }
-            )
-
-            if outcome["status"] == "FAILED":
-                logger.error(f"Step {step_index} failed: {outcome.get('error')}")
-                self.last_error = outcome.get("error") or "Step execution failed"
-                self.state_manager.update_task(task_id, {
-                    "status": "FAILED",
-                    "error": self.last_error,
-                    "failure_cause": "execution_step_failed"
-                })
-                self.state_manager.archive_task(task_id, reason="failed_execute")
-                self.state = ControllerState.FAILED
-                break
-
-            self.state_manager.complete_step(
-                task_id,
-                step_index=step_index,
-                outcome="SUCCESS",
-                artifact=str(outcome.get("result")),
-                tool_name=outcome.get("tool"),
-                tool_params=outcome.get("params")
-            )
-            executed_steps += 1
-
+        """Execute remaining steps for an existing task state using WorkflowEngine."""
+        # Use WorkflowEngine to execute the remaining steps
+        executed_steps = await self._execute_with_workflow_engine(task_id, goal, max_steps)
         return executed_steps
 
     async def _select_tool_for_step(self, step_description: str, goal: str, task_id: str) -> Dict[str, Any]:
@@ -525,3 +479,106 @@ class ECFController:
             return task_id
         finally:
             await self.llm.close()
+
+    async def _convert_plan_to_workflow_nodes(self, task_id: str, goal: str) -> List[str]:
+        """Convert plan steps to WorkflowEngine nodes and return node IDs."""
+        task_state = self.state_manager.load_task(task_id)
+        next_steps = task_state.get("next_steps", [])
+        node_ids = []
+        
+        for index, step in enumerate(next_steps):
+            step_description = step.get("description") if isinstance(step, dict) else None
+            if not step_description:
+                continue
+                
+            # Select tool for this step
+            selection = await self._select_tool_for_step(step_description, goal, task_id)
+            tool_name = selection.get("tool")
+            tool_params = selection.get("params", {})
+            
+            if not tool_name or tool_name == "none":
+                logger.warning(f"Step {index} not executable: no matching tool")
+                continue
+                
+            # Create a simple node that executes the tool
+            node_id = f"step_{index}_{tool_name}"
+            node = SimpleToolNode(
+                id=node_id,
+                description=step_description,
+                tool_name=tool_name,
+                tool_params=tool_params,
+                registry=self.registry
+            )
+            self.workflow_engine.add_node(node)
+            node_ids.append(node_id)
+            
+        return node_ids
+
+    async def _execute_with_workflow_engine(self, task_id: str, goal: str, max_steps: Optional[int] = None) -> int:
+        """Execute remaining steps using WorkflowEngine."""
+        # Convert plan steps to workflow nodes
+        node_ids = await self._convert_plan_to_workflow_nodes(task_id, goal)
+        if not node_ids:
+            logger.info("No executable steps found for workflow engine")
+            return 0
+            
+        # Create TaskContext for workflow execution
+        context = TaskContext(
+            memory_store=None,  # Not used in this phase
+            tool_registry=self.registry,
+            data={
+                "task_id": task_id,
+                "goal": goal,
+                "workflow_id": f"workflow_{task_id}",
+                "start_time": None  # Will be set by WorkflowEngine
+            }
+        )
+        
+        # Execute workflow
+        result = await self.workflow_engine.execute_workflow(context)
+        
+        if result["status"] == "completed":
+            # Update task state based on workflow results
+            executed_steps = len(node_ids)
+            for index, node_id in enumerate(node_ids):
+                if max_steps is not None and index >= max_steps:
+                    break
+                    
+                # Get result for this node
+                node_result = result.get("results", {}).get(node_id, {})
+                tool_name = node_result.get("tool_name", "unknown")
+                tool_params = node_result.get("tool_params", {})
+                artifact = str(node_result.get("result", ""))
+                
+                # Update task state
+                self.state_manager.complete_step(
+                    task_id,
+                    step_index=index,
+                    outcome="SUCCESS",
+                    artifact=artifact,
+                    tool_name=tool_name,
+                    tool_params=tool_params
+                )
+                
+                # Update next_steps to remove completed step
+                task_state = self.state_manager.load_task(task_id)
+                next_steps = task_state.get("next_steps", [])
+                if next_steps:
+                    self.state_manager.update_task(task_id, {
+                        "next_steps": next_steps[1:]
+                    })
+                
+            return executed_steps
+        else:
+            # Workflow failed
+            error_msg = result.get("error", "Workflow execution failed")
+            logger.error(f"Workflow failed: {error_msg}")
+            self.last_error = error_msg
+            self.state_manager.update_task(task_id, {
+                "status": "FAILED",
+                "error": self.last_error,
+                "failure_cause": "execution_step_failed"
+            })
+            self.state_manager.archive_task(task_id, reason="failed_execute")
+            self.state = ControllerState.FAILED
+            return 0
