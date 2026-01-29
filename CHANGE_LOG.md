@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-29 08:55
+  - Summary: Restored controller WorkflowEngine execution contract and failure archiving semantics for tool execution, dependency mapping, and resume flows; closed trace store SQLite handles to prevent Windows temp lock failures.
+  - Scope: `backend/core/controller.py`, `backend/memory/stores/trace_store.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-28 19:00
   - Summary: Controller execution path now uses WorkflowEngine.execute_workflow() via SimpleToolNode bridge
   - Scope: `backend/core/controller.py`, `tests/integration/test_controller_workflow_integration.py`

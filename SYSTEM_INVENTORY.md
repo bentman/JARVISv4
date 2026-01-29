@@ -18,6 +18,11 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Controller trace store closes SQLite handles deterministically
+  - **State**: Verified
+  - **Location**: `backend/memory/stores/trace_store.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+
 - **Capability**: Controller executes plans via WorkflowEngine
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/controller/engine/engine.py`

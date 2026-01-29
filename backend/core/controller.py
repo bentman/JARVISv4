@@ -25,14 +25,38 @@ logger = logging.getLogger(__name__)
 class SimpleToolNode(BaseNode):
     """Simple node that executes a single tool with predefined parameters."""
     
-    def __init__(self, id: str, description: str, tool_name: str, tool_params: dict, registry: ToolRegistry):
+    def __init__(
+        self,
+        id: str,
+        description: str,
+        tool_name: str,
+        tool_params: dict,
+        registry: ToolRegistry,
+        dependencies: Optional[List[str]] = None,
+        executor: Optional[ExecutorAgent] = None
+    ):
         super().__init__(id, NodeType.ROUTER, description)  # Use ROUTER type for tool execution
         self.tool_name = tool_name
         self.tool_params = tool_params
         self.registry = registry
+        self.dependencies = dependencies or []
+        self.executor = executor
     
     async def execute(self, context: TaskContext, results: dict) -> dict:
         """Execute the tool and return the result."""
+        if self.executor:
+            try:
+                return await self.executor.execute_step(self.description, {
+                    "tool": self.tool_name,
+                    "params": self.tool_params
+                })
+            except Exception as exc:
+                return {
+                    "status": "FAILED",
+                    "error": str(exc),
+                    "tool": self.tool_name,
+                    "params": self.tool_params
+                }
         tool = self.registry.get_tool(self.tool_name)
         if not tool:
             raise Exception(f"Tool {self.tool_name} not found in registry")
@@ -400,6 +424,13 @@ class ECFController:
                         raise InvalidPlanError(
                             f"Plan step {index} not executable: tool '{tool_name}' not registered"
                         )
+                    if isinstance(step, dict):
+                        step["tool"] = tool_name
+                        step["tool_params"] = selection.get("params", {})
+
+                self.state_manager.update_task(task_id, {
+                    "next_steps": planned_steps
+                })
 
                 self.trace_store.append_decision(
                     task_id,
@@ -485,6 +516,16 @@ class ECFController:
         task_state = self.state_manager.load_task(task_id)
         next_steps = task_state.get("next_steps", [])
         node_ids = []
+        id_mapping: Dict[str, str] = {}
+        for index, step in enumerate(next_steps):
+            if not isinstance(step, dict):
+                continue
+            step_id = str(step.get("id")) if step.get("id") is not None else None
+            tool_name = step.get("tool")
+            if not tool_name:
+                tool_name = "unknown"
+            if step_id:
+                id_mapping[step_id] = f"step_{index}_{tool_name}"
         
         for index, step in enumerate(next_steps):
             step_description = step.get("description") if isinstance(step, dict) else None
@@ -492,9 +533,14 @@ class ECFController:
                 continue
                 
             # Select tool for this step
-            selection = await self._select_tool_for_step(step_description, goal, task_id)
-            tool_name = selection.get("tool")
-            tool_params = selection.get("params", {})
+            tool_name = step.get("tool") if isinstance(step, dict) else None
+            tool_params = step.get("tool_params") if isinstance(step, dict) else None
+            if not tool_name:
+                selection = await self._select_tool_for_step(step_description, goal, task_id)
+                tool_name = selection.get("tool")
+                tool_params = selection.get("params", {})
+            if tool_params is None:
+                tool_params = {}
             
             if not tool_name or tool_name == "none":
                 logger.warning(f"Step {index} not executable: no matching tool")
@@ -502,12 +548,19 @@ class ECFController:
                 
             # Create a simple node that executes the tool
             node_id = f"step_{index}_{tool_name}"
+            dependencies = []
+            for dep in step.get("dependencies", []):
+                dep_key = str(dep)
+                if dep_key in id_mapping:
+                    dependencies.append(id_mapping[dep_key])
             node = SimpleToolNode(
                 id=node_id,
                 description=step_description,
                 tool_name=tool_name,
                 tool_params=tool_params,
-                registry=self.registry
+                registry=self.registry,
+                dependencies=dependencies,
+                executor=self.executor
             )
             self.workflow_engine.add_node(node)
             node_ids.append(node_id)
@@ -540,34 +593,85 @@ class ECFController:
         if result["status"] == "completed":
             # Update task state based on workflow results
             executed_steps = len(node_ids)
-            for index, node_id in enumerate(node_ids):
-                if max_steps is not None and index >= max_steps:
-                    break
+            try:
+                for index, node_id in enumerate(node_ids):
+                    if max_steps is not None and index >= max_steps:
+                        break
+                    if index >= self.MAX_EXECUTED_STEPS:
+                        raise RuntimeError(
+                            f"MAX_EXECUTED_STEPS exceeded: {self.MAX_EXECUTED_STEPS}"
+                        )
+                        
+                    # Get result for this node
+                    node_result = result.get("results", {}).get(node_id, {})
+                    tool_name = node_result.get("tool_name") or node_result.get("tool") or "unknown"
+                    tool_params = node_result.get("tool_params") or node_result.get("params") or {}
+                    status = node_result.get("status", "SUCCESS")
+                    error = node_result.get("error")
+                    if status == "FAILED":
+                        if tool_name == "none":
+                            raise RuntimeError("execution_step_failed: no_tool")
+                        raise RuntimeError(error or "tool execution failed")
+                    artifact = str(node_result.get("result", ""))
                     
-                # Get result for this node
-                node_result = result.get("results", {}).get(node_id, {})
-                tool_name = node_result.get("tool_name", "unknown")
-                tool_params = node_result.get("tool_params", {})
-                artifact = str(node_result.get("result", ""))
-                
-                # Update task state
-                self.state_manager.complete_step(
-                    task_id,
-                    step_index=index,
-                    outcome="SUCCESS",
-                    artifact=artifact,
-                    tool_name=tool_name,
-                    tool_params=tool_params
-                )
-                
-                # Update next_steps to remove completed step
-                task_state = self.state_manager.load_task(task_id)
-                next_steps = task_state.get("next_steps", [])
-                if next_steps:
+                    # Update task state
+                    task_state = self.state_manager.load_task(task_id)
+                    next_steps = task_state.get("next_steps", [])
+                    step_description = None
+                    if index < len(next_steps):
+                        step_description = next_steps[index].get("description") if isinstance(next_steps[index], dict) else None
                     self.state_manager.update_task(task_id, {
-                        "next_steps": next_steps[1:]
+                        "current_step": {
+                            "index": index,
+                            "description": step_description
+                        }
                     })
-                
+                    self.trace_store.append_tool_call(
+                        task_id=task_id,
+                        step_index=index,
+                        tool_name=tool_name,
+                        params=tool_params,
+                        status=status,
+                        result=str(node_result.get("result")) if node_result.get("result") is not None else None,
+                        error=error
+                    )
+                    self.state_manager.complete_step(
+                        task_id,
+                        step_index=index,
+                        outcome="SUCCESS",
+                        artifact=artifact,
+                        tool_name=tool_name,
+                        tool_params=tool_params
+                    )
+                    
+                    # Update next_steps to remove completed step
+                    task_state = self.state_manager.load_task(task_id)
+                    next_steps = task_state.get("next_steps", [])
+                    if next_steps:
+                        self.state_manager.update_task(task_id, {
+                            "next_steps": next_steps[1:]
+                        })
+            except RuntimeError as exc:
+                error_msg = str(exc)
+                logger.error(f"Workflow failed: {error_msg}")
+                self.last_error = error_msg
+                if error_msg.startswith("execution_step_failed") or "MAX_EXECUTED_STEPS" in error_msg:
+                    self.state_manager.update_task(task_id, {
+                        "status": "FAILED",
+                        "error": self.last_error,
+                        "failure_cause": "execution_step_failed"
+                    })
+                    self.state_manager.archive_task(task_id, reason="failed_execute")
+                else:
+                    self.state_manager.update_task(task_id, {
+                        "status": "FAILED",
+                        "error": self.last_error,
+                        "failure_cause": "controller_error"
+                    })
+                    self.state_manager.archive_task(task_id, reason="error")
+                self.state = ControllerState.FAILED
+                return 0
+
             return executed_steps
         else:
             # Workflow failed

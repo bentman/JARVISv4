@@ -107,7 +107,8 @@ class WorkflowEngine:
             }
             if self.state:
                 self.state.status = NodeStatus.COMPLETED
-                final_result["execution_time"] = (self.state.start_time - context.data.get("start_time", self.state.start_time)).total_seconds()
+                workflow_start = context.data.get("start_time") or self.state.start_time
+                final_result["execution_time"] = (self.state.start_time - workflow_start).total_seconds()
             
             logger.info("Workflow completed successfully")
             return final_result

@@ -17,7 +17,8 @@ class TraceStore:
 
     def _init_db(self) -> None:
         Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.db_path) as conn:
+        conn = sqlite3.connect(self.db_path)
+        try:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS trace_decisions (
@@ -57,15 +58,20 @@ class TraceStore:
                 """
             )
             conn.commit()
+        finally:
+            conn.close()
 
     def append_decision(self, task_id: str, decision_type: str, payload: Dict[str, Any]) -> None:
         timestamp = datetime.now(UTC).isoformat()
-        with sqlite3.connect(self.db_path) as conn:
+        conn = sqlite3.connect(self.db_path)
+        try:
             conn.execute(
                 "INSERT INTO trace_decisions (task_id, timestamp, decision_type, payload) VALUES (?, ?, ?, ?)",
                 (task_id, timestamp, decision_type, json.dumps(payload))
             )
             conn.commit()
+        finally:
+            conn.close()
 
     def append_tool_call(
         self,
@@ -78,7 +84,8 @@ class TraceStore:
         error: Optional[str]
     ) -> None:
         timestamp = datetime.now(UTC).isoformat()
-        with sqlite3.connect(self.db_path) as conn:
+        conn = sqlite3.connect(self.db_path)
+        try:
             conn.execute(
                 """
                 INSERT INTO trace_tool_calls (
@@ -97,6 +104,8 @@ class TraceStore:
                 )
             )
             conn.commit()
+        finally:
+            conn.close()
 
     def append_validation(
         self,
@@ -106,9 +115,12 @@ class TraceStore:
         details: Dict[str, Any]
     ) -> None:
         timestamp = datetime.now(UTC).isoformat()
-        with sqlite3.connect(self.db_path) as conn:
+        conn = sqlite3.connect(self.db_path)
+        try:
             conn.execute(
                 "INSERT INTO trace_validations (task_id, timestamp, validation_type, status, details) VALUES (?, ?, ?, ?, ?)",
                 (task_id, timestamp, validation_type, status, json.dumps(details))
             )
             conn.commit()
+        finally:
+            conn.close()
