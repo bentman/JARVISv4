@@ -15,6 +15,11 @@
 
 ## Entries
 
+- 2026-01-28 15:11
+  - Summary: Enhanced WorkflowEngine with v3 execution logic and comprehensive test coverage
+  - Scope: `backend/controller/engine/engine.py`, `tests/unit/test_workflow_engine.py`, `tests/unit/test_controller.py`, `SYSTEM_INVENTORY.md`
+  - Evidence: `backend/.venv/Scripts/python -m pytest tests/unit/test_workflow_engine.py -v` (12/12 PASS), `python scripts/validate_backend.py` (122/122 PASS)
+
 - 2026-01-28 10:48
   - Summary: Extended Piper TTS model presence contract to report `model_found` status deterministically via `MODEL_PATH` + `piper/{voice}.onnx` resolution, preserving B1 deferred execution semantics.
   - Scope: `backend/core/voice/runtime.py`, `tests/unit/test_voice_tool.py`

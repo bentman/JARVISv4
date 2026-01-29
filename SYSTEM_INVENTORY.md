@@ -18,6 +18,12 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Enhanced WorkflowEngine with v3 execution logic
+  - **State**: Verified
+  - **Location**: `backend/controller/engine/engine.py`
+  - **Evidence**: All 12 workflow engine tests pass, full backend validation passes
+  - **Notes**: Linear workflow execution with dependency ordering, state tracking, and error handling
+
 - **Piper Model Presence & Placement Contract (TTS)**
   - State: Verified
   - Location: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_tool.py`
