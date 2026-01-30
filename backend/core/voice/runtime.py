@@ -9,6 +9,9 @@ import os
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
+from backend.core.config.settings import load_settings
+from backend.core.model_manager import ModelProvisioningError, model_manager
+
 def _run_command(command: List[str], timeout: int = 30) -> Dict[str, Any]:
     """
     Execute a command and return structured result.
@@ -117,12 +120,31 @@ def run_stt(audio_file_path: str, model: str = "base", **kwargs) -> Dict[str, An
     model_filename = f"ggml-{model}.bin"
     model_required = os.path.join(model_base, model_filename)
     model_found = os.path.exists(model_required)
+
+    settings = load_settings()
+    policy = settings.model_provisioning_policy
+    provisioning_fields = {
+        "provisioning_policy": policy,
+        "provision_attempted": False,
+        "provisioned": False,
+        "provision_error": None,
+    }
+
+    if not model_found and policy == "on_demand":
+        provisioning_fields["provision_attempted"] = True
+        try:
+            model_manager.download_recommended_model("stt")
+            model_found = os.path.exists(model_required)
+            provisioning_fields["provisioned"] = model_found
+        except ModelProvisioningError as exc:
+            provisioning_fields["provision_error"] = str(exc)
     
     contract_extras = {
         "model_base_path": model_base,
         "model_required": model_required,
         "model_found": model_found,
-        "model_error": None if model_found else f"Model file not found: {model_required}"
+        "model_error": None if model_found else f"Model file not found: {model_required}",
+        **provisioning_fields
     }
 
     if not model_found:
@@ -208,12 +230,31 @@ def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None
         model_required = os.path.join(model_base, "piper", f"{voice}.onnx")
     
     model_found = os.path.exists(model_required)
+
+    settings = load_settings()
+    policy = settings.model_provisioning_policy
+    provisioning_fields = {
+        "provisioning_policy": policy,
+        "provision_attempted": False,
+        "provisioned": False,
+        "provision_error": None,
+    }
+
+    if not model_found and policy == "on_demand":
+        provisioning_fields["provision_attempted"] = True
+        try:
+            model_manager.download_recommended_model("tts")
+            model_found = os.path.exists(model_required)
+            provisioning_fields["provisioned"] = model_found
+        except ModelProvisioningError as exc:
+            provisioning_fields["provision_error"] = str(exc)
     
     contract_extras = {
         "model_base_path": model_base,
         "model_required": model_required,
         "model_found": model_found,
-        "model_error": None if model_found else f"Model file not found: {model_required}"
+        "model_error": None if model_found else f"Model file not found: {model_required}",
+        **provisioning_fields
     }
 
     # For B1, we only support --help execution

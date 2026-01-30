@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-30 13:51
+  - Summary: Added unified model provisioning policy (default strict) and minimal voice model manager with deterministic provisioning fields in voice runtime.
+  - Scope: `backend/core/config/settings.py`, `backend/core/model_manager.py`, `backend/core/voice/runtime.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-29 08:55
   - Summary: Restored controller WorkflowEngine execution contract and failure archiving semantics for tool execution, dependency mapping, and resume flows; closed trace store SQLite handles to prevent Windows temp lock failures.
   - Scope: `backend/core/controller.py`, `backend/memory/stores/trace_store.py`

@@ -18,6 +18,11 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Unified voice model provisioning policy (strict default) with deterministic provisioning metadata
+  - **State**: Verified
+  - **Location**: `backend/core/config/settings.py`, `backend/core/model_manager.py`, `backend/core/voice/runtime.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+
 - **Capability**: Controller trace store closes SQLite handles deterministically
   - **State**: Verified
   - **Location**: `backend/memory/stores/trace_store.py`

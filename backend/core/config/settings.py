@@ -38,6 +38,9 @@ class Settings:
     search_google_cx: Optional[str] = None
     redis_url: Optional[str] = None
 
+    # Model Provisioning Policy
+    model_provisioning_policy: str = "strict"  # strict, on_demand, startup
+
     # API Settings
     api_host: str = "127.0.0.1"
     api_port: int = 8000
@@ -69,6 +72,7 @@ def load_settings(env_file: Optional[Path] = None, override_environ: bool = Fals
         search_google_api_key=os.environ.get("SEARCH_GOOGLE_API_KEY"),
         search_google_cx=os.environ.get("SEARCH_GOOGLE_CX"),
         redis_url=os.environ.get("REDIS_URL"),
+        model_provisioning_policy=os.environ.get("MODEL_PROVISIONING_POLICY", "strict"),
         api_host=os.environ.get("API_HOST", "127.0.0.1"),
         api_port=int(os.environ.get("API_PORT", "8000"))
     )
