@@ -5,7 +5,7 @@ Tests ToolRegistry integration and deterministic voice tool execution.
 
 import pytest
 import os
-from backend.tools.voice import VoiceSTTTool, VoiceTTSTool
+from backend.tools.voice import VoiceSTTTool, VoiceTTSTool, VoiceWakeWordTool
 from backend.tools.registry import ToolRegistry
 from backend.tools.registry.registry import ToolParameterValidationError
 
@@ -48,6 +48,21 @@ class TestVoiceTools:
         assert definition.name == "voice_tts"
         assert "text" in definition.parameters["properties"]
         assert "voice" in definition.parameters["properties"]
+
+    def test_voice_wake_word_tool_registration(self):
+        """Test that voice_wake_word tool can be registered and retrieved."""
+        registry = ToolRegistry()
+        tool = VoiceWakeWordTool()
+
+        registry.register_tool(tool)
+
+        assert "voice_wake_word" in registry.list_tools()
+        assert registry.get_tool("voice_wake_word") is not None
+
+        definition = tool.definition
+        assert definition.name == "voice_wake_word"
+        assert "audio_file_path" in definition.parameters["properties"]
+        assert "threshold" in definition.parameters["properties"]
 
     @pytest.mark.asyncio
     async def test_voice_stt_execution_with_test_wav(self):
@@ -150,6 +165,17 @@ class TestVoiceTools:
         assert "return_code" in result
 
     @pytest.mark.asyncio
+    async def test_voice_wake_word_missing_file(self):
+        """Test voice_wake_word tool with missing audio file returns structured error."""
+        tool = VoiceWakeWordTool()
+        result = await tool.execute(audio_file_path="nonexistent_wake.wav")
+
+        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["return_code"] == -4
+        assert "Audio file not found" in result["stderr"]
+
+    @pytest.mark.asyncio
     async def test_tool_registry_parameter_validation(self):
         """Test ToolRegistry parameter validation for voice tools."""
         registry = ToolRegistry()
@@ -191,6 +217,17 @@ class TestVoiceTools:
         assert "artifacts" in tts_result
         assert "audio_path" in tts_result["artifacts"]
         assert tts_result["artifacts"]["audio_path"] is None
+
+        wake_tool = VoiceWakeWordTool()
+        wake_result = await wake_tool.execute(audio_file_path="nonexistent.wav")
+
+        assert "mode" in wake_result
+        assert wake_result["mode"] == "wake_word"
+        assert "input" in wake_result
+        assert wake_result["input"]["audio_file_path"] == "nonexistent.wav"
+        assert "artifacts" in wake_result
+        assert "detected" in wake_result["artifacts"]
+        assert wake_result["artifacts"]["detected"] is False
 
     @pytest.mark.asyncio
     async def test_voice_stt_model_missing_contract(self, monkeypatch, tmp_path):

@@ -5,7 +5,7 @@ Tests subprocess execution of whisper and piper binaries.
 
 import pytest
 import os
-from backend.core.voice.runtime import run_stt, run_tts
+from backend.core.voice.runtime import run_stt, run_tts, run_wake_word
 
 class TestVoiceRuntime:
     """Test suite for voice runtime functions."""
@@ -69,3 +69,27 @@ class TestVoiceRuntime:
         assert result["success"] is False
         assert result["return_code"] == -5
         assert "TTS real execution deferred" in result["stderr"]
+
+    def test_wake_word_missing_audio_file(self):
+        """Test wake word failure with missing audio file."""
+        result = run_wake_word("missing_wake.wav")
+        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["return_code"] == -4
+        assert "Audio file not found" in result["stderr"]
+
+    def test_wake_word_missing_models(self, monkeypatch, tmp_path):
+        """Test wake word contract when models are missing."""
+        monkeypatch.setenv("MODEL_PATH", str(tmp_path))
+        test_wav_path = os.path.join("tests", "test_alexa.wav")
+        if not os.path.exists(test_wav_path):
+            pytest.skip("test_alexa.wav fixture not available")
+
+        result = run_wake_word(test_wav_path)
+        assert result["success"] is False
+        assert result["return_code"] in (-6, -7)
+        assert "artifacts" in result
+        artifacts = result["artifacts"]
+        assert artifacts["model_base_path"] == str(tmp_path)
+        assert artifacts["model_found"] is False
+        assert "model_required" in artifacts

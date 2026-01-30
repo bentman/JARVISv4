@@ -6,7 +6,7 @@ Provides ECF-facing voice execution tools that wrap the Phase B1 voice runtime.
 import os
 from typing import Any, Dict
 from backend.tools.base import BaseTool, ToolDefinition
-from backend.core.voice.runtime import run_stt, run_tts
+from backend.core.voice.runtime import run_stt, run_tts, run_wake_word
 
 class VoiceSTTTool(BaseTool):
     """
@@ -126,3 +126,56 @@ class VoiceTTSTool(BaseTool):
 
         # Call Phase B1 runtime and return result verbatim
         return run_tts(text, voice)
+
+
+class VoiceWakeWordTool(BaseTool):
+    """
+    Wake word detection tool using openWakeWord.
+    Returns deterministic artifact results.
+    """
+
+    def __init__(self):
+        self._definition = ToolDefinition(
+            name="voice_wake_word",
+            description="Detect wake word using openWakeWord (requires audio file path).",
+            parameters={
+                "type": "object",
+                "properties": {
+                    "audio_file_path": {
+                        "type": "string",
+                        "description": "Path to the audio file to analyze"
+                    },
+                    "threshold": {
+                        "type": "number",
+                        "description": "Wake word detection threshold",
+                        "default": 0.5
+                    }
+                },
+                "required": ["audio_file_path"]
+            }
+        )
+
+    @property
+    def definition(self) -> ToolDefinition:
+        return self._definition
+
+    async def execute(self, **kwargs) -> Dict[str, Any]:
+        """
+        Execute wake word detection via runtime.
+        Returns structured result dict verbatim (including failures).
+        """
+        audio_file_path = kwargs.get("audio_file_path")
+        threshold = kwargs.get("threshold", 0.5)
+
+        if not audio_file_path or not isinstance(audio_file_path, str):
+            return {
+                "success": False,
+                "command": [],
+                "stdout": "",
+                "stderr": "audio_file_path must be a non-empty string",
+                "return_code": -10,
+                "duration_ms": 0.0,
+                "timestamp": __import__('datetime').datetime.now().isoformat()
+            }
+
+        return run_wake_word(audio_file_path, threshold)

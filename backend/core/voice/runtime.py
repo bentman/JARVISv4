@@ -6,7 +6,8 @@ Provides subprocess-based execution of whisper (STT) and piper (TTS) binaries.
 import subprocess
 import time
 import os
-from typing import Dict, Any, List, Optional
+import glob
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 
 from backend.core.config.settings import load_settings
@@ -299,3 +300,203 @@ def run_tts(text: str, voice: str = "default", output_file: Optional[str] = None
     }
     
     return result
+
+
+def _resolve_openwakeword_models(model_base: str) -> Tuple[Dict[str, List[str]], Dict[str, bool]]:
+    oww_dir = os.path.join(model_base, "openwakeword")
+    required_patterns = {
+        "wakeword": [
+            os.path.join(oww_dir, "alexa*.onnx"),
+            os.path.join(oww_dir, "alexa*.tflite"),
+        ],
+        "melspectrogram": [
+            os.path.join(oww_dir, "melspectrogram*.onnx"),
+            os.path.join(oww_dir, "melspectrogram*.tflite"),
+        ],
+        "embedding_model": [
+            os.path.join(oww_dir, "embedding_model*.onnx"),
+            os.path.join(oww_dir, "embedding_model*.tflite"),
+        ],
+    }
+
+    presence = {}
+    for key, patterns in required_patterns.items():
+        presence[key] = any(glob.glob(pattern) for pattern in patterns)
+
+    return required_patterns, presence
+
+
+def run_wake_word(audio_file_path: str, threshold: float = 0.5) -> Dict[str, Any]:
+    """
+    Detect wake word using openWakeWord models with deterministic artifacts.
+
+    Args:
+        audio_file_path: Path to audio file (WAV, PCM 16-bit preferred).
+        threshold: Detection threshold (default 0.5).
+
+    Returns:
+        Structured result dictionary
+    """
+    start_time = time.time()
+    settings = load_settings()
+    policy = settings.model_provisioning_policy
+
+    model_base = os.environ.get("MODEL_PATH", "/models")
+    required_patterns, presence = _resolve_openwakeword_models(model_base)
+    model_found = all(presence.values())
+    model_error = None if model_found else "OpenWakeWord model files not found under MODEL_PATH"
+
+    artifacts_base = {
+        "detected": False,
+        "scores": {},
+        "threshold": threshold,
+        "model_base_path": model_base,
+        "model_required": required_patterns,
+        "model_found": model_found,
+        "model_error": model_error,
+        "provisioning_policy": policy,
+    }
+
+    if not os.path.exists(audio_file_path):
+        return {
+            "success": False,
+            "command": [],
+            "stdout": "",
+            "stderr": f"Audio file not found: {audio_file_path}",
+            "return_code": -4,
+            "duration_ms": 0.0,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "wake_word",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "threshold": threshold,
+            },
+            "artifacts": artifacts_base,
+        }
+
+    try:
+        from openwakeword.model import Model as OWWModel
+        import numpy as np
+    except Exception as exc:
+        return {
+            "success": False,
+            "command": [],
+            "stdout": "",
+            "stderr": f"openWakeWord not available: {exc}",
+            "return_code": -7,
+            "duration_ms": 0.0,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "wake_word",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "threshold": threshold,
+            },
+            "artifacts": artifacts_base,
+        }
+
+    if not model_found:
+        return {
+            "success": False,
+            "command": [],
+            "stdout": "",
+            "stderr": model_error,
+            "return_code": -6,
+            "duration_ms": 0.0,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "wake_word",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "threshold": threshold,
+            },
+            "artifacts": artifacts_base,
+        }
+
+    try:
+        import wave
+
+        with wave.open(audio_file_path, "rb") as wav_file:
+            n_channels = wav_file.getnchannels()
+            sampwidth = wav_file.getsampwidth()
+            framerate = wav_file.getframerate()
+            frames = wav_file.getnframes()
+            pcm_bytes = wav_file.readframes(frames)
+
+        if sampwidth != 2:
+            raise ValueError("Unsupported sample width; expected 16-bit PCM")
+
+        pcm = np.frombuffer(pcm_bytes, dtype=np.int16)
+        if n_channels > 1:
+            pcm = pcm.reshape(-1, n_channels).mean(axis=1).astype(np.int16)
+
+        target_sr = 16000
+        if framerate != target_sr:
+            x_old = np.linspace(0, 1, num=len(pcm), endpoint=False)
+            x_new = np.linspace(0, 1, num=int(len(pcm) * target_sr / framerate), endpoint=False)
+            pcm = np.interp(x_new, x_old, pcm).astype(np.int16)
+
+        audio = (pcm.astype(np.float32) / 32768.0).reshape(1, -1)
+
+        oww_dir = os.path.join(model_base, "openwakeword")
+        model_files = glob.glob(os.path.join(oww_dir, "*.onnx"))
+        inference_framework = "onnx"
+        if not model_files:
+            model_files = glob.glob(os.path.join(oww_dir, "*.tflite"))
+            inference_framework = "tflite"
+
+        melspec_path = next(iter(glob.glob(os.path.join(oww_dir, "melspectrogram*.onnx"))), None)
+        embedding_path = next(iter(glob.glob(os.path.join(oww_dir, "embedding_model*.onnx"))), None)
+
+        wake_model = OWWModel(
+            wakeword_models=model_files,
+            inference_framework=inference_framework,
+            melspec_model_path=melspec_path,
+            embedding_model_path=embedding_path,
+        )
+
+        scores_raw = wake_model.predict(audio)
+        scores = {}
+        for key, score in scores_raw.items():
+            if isinstance(score, (list, tuple, np.ndarray)):
+                scores[key] = float(np.max(score))
+            else:
+                scores[key] = float(score)
+
+        detected = any(val >= threshold for val in scores.values()) if scores else False
+        duration_ms = (time.time() - start_time) * 1000
+
+        return {
+            "success": True,
+            "command": [],
+            "stdout": "",
+            "stderr": "",
+            "return_code": 0,
+            "duration_ms": duration_ms,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "wake_word",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "threshold": threshold,
+            },
+            "artifacts": {
+                **artifacts_base,
+                "detected": detected,
+                "scores": scores,
+            },
+        }
+    except Exception as exc:
+        duration_ms = (time.time() - start_time) * 1000
+        return {
+            "success": False,
+            "command": [],
+            "stdout": "",
+            "stderr": f"Wake word detection failed: {exc}",
+            "return_code": -8,
+            "duration_ms": duration_ms,
+            "timestamp": datetime.now().isoformat(),
+            "mode": "wake_word",
+            "input": {
+                "audio_file_path": audio_file_path,
+                "threshold": threshold,
+            },
+            "artifacts": artifacts_base,
+        }

@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-30 14:47
+  - Summary: Added deterministic openWakeWord wake-word detection and voice_wake_word tool with strict-only model presence handling under ${MODEL_PATH}/openwakeword.
+  - Scope: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_runtime.py`, `tests/unit/test_voice_tool.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-30 13:51
   - Summary: Added unified model provisioning policy (default strict) and minimal voice model manager with deterministic provisioning fields in voice runtime.
   - Scope: `backend/core/config/settings.py`, `backend/core/model_manager.py`, `backend/core/voice/runtime.py`

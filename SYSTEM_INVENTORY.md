@@ -18,6 +18,11 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Wake-word detection via openWakeWord with deterministic artifacts and strict provisioning semantics
+  - **State**: Verified
+  - **Location**: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_runtime.py`, `tests/unit/test_voice_tool.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+
 - **Capability**: Unified voice model provisioning policy (strict default) with deterministic provisioning metadata
   - **State**: Verified
   - **Location**: `backend/core/config/settings.py`, `backend/core/model_manager.py`, `backend/core/voice/runtime.py`
