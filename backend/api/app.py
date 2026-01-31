@@ -4,9 +4,16 @@ from time import perf_counter
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 
-from backend.api.models import TaskRequest, TaskResponse
+from backend.api.models import (
+    TaskRequest,
+    TaskResponse,
+    VoiceSTTRequest,
+    VoiceTTSRequest,
+    VoiceWakeWordRequest,
+)
 from backend.core.controller import ECFController
 from backend.core.observability.logging import metrics_collector
+from backend.tools.voice import VoiceSTTTool, VoiceTTSTool, VoiceWakeWordTool
 
 app = FastAPI(title="JARVISv4 API", version="0.1.0")
 router = APIRouter()
@@ -43,6 +50,27 @@ async def create_task(payload: TaskRequest) -> TaskResponse:
         )
 
     return TaskResponse(task_id=task_id, state=controller.state.value, error=error)
+
+
+@router.post("/voice/stt")
+async def voice_stt(payload: VoiceSTTRequest) -> dict:
+    tool = VoiceSTTTool()
+    params = payload.model_dump(exclude_none=True)
+    return await tool.execute(**params)
+
+
+@router.post("/voice/tts")
+async def voice_tts(payload: VoiceTTSRequest) -> dict:
+    tool = VoiceTTSTool()
+    params = payload.model_dump(exclude_none=True)
+    return await tool.execute(**params)
+
+
+@router.post("/voice/wake_word")
+async def voice_wake_word(payload: VoiceWakeWordRequest) -> dict:
+    tool = VoiceWakeWordTool()
+    params = payload.model_dump(exclude_none=True)
+    return await tool.execute(**params)
 
 
 app.include_router(router)

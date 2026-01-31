@@ -18,6 +18,17 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Voice API endpoints (STT/TTS/Wake Word) as pass-through wrappers over voice tools
+  - **State**: Verified
+  - **Location**: `backend/api/app.py`, `backend/api/models.py`, `backend/tools/voice.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - **Capability**: openWakeWord provisioning under MODEL_PROVISIONING_POLICY (strict=no provisioning; on_demand/startup invoke library downloader) with deterministic provisioning artifacts
   - **State**: Verified
   - **Location**: `backend/core/voice/runtime.py`, `tests/unit/test_voice_runtime.py`

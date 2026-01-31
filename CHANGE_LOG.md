@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-30 18:45
+  - Summary: Added minimal FastAPI voice endpoints that pass through to existing voice tools without altering artifacts or provisioning behavior.
+  - Scope: `backend/api/app.py`, `backend/api/models.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-30 18:20
   - Summary: Added non-strict openWakeWord provisioning for wake-word detection with startup/on-demand policy support and deterministic provisioning artifacts.
   - Scope: `backend/core/voice/runtime.py`, `tests/unit/test_voice_runtime.py`
