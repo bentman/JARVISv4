@@ -37,25 +37,21 @@ async def test_voice_lifecycle_orchestration(tmp_path, monkeypatch):
         state = json.load(f)
 
     completed = state.get("completed_steps", [])
-    assert len(completed) == 5, "Voice lifecycle should record 5 completed steps"
+    assert len(completed) == 4, "Voice lifecycle should record 4 completed steps"
 
     wake_step = completed[0]
     assert wake_step["tool_name"] == "voice_wake_word"
     assert wake_step["tool_params"]["audio_file_path"] == audio_path
     assert "mode" in wake_step["artifact"]
 
-    capture_step = completed[1]
-    assert capture_step["tool_name"] == "text_output"
-    assert capture_step["artifact"] == audio_path
-
-    stt_step = completed[2]
+    stt_step = completed[1]
     assert stt_step["tool_name"] == "voice_stt"
     assert stt_step["tool_params"]["audio_file_path"] == audio_path
 
-    agent_step = completed[3]
+    agent_step = completed[2]
     assert agent_step["tool_name"] == "text_output"
     assert agent_step["artifact"] == "voice_response"
 
-    tts_step = completed[4]
+    tts_step = completed[3]
     assert tts_step["tool_name"] == "voice_tts"
     assert tts_step["tool_params"]["text"] == "--help"

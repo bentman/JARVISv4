@@ -40,6 +40,13 @@ class WorkingStateManager:
             return []
         return sorted(self.archive_path.glob("**/*.json"))
 
+    def find_archived_task_path(self, task_id: str) -> Path:
+        """Find the archived task file for a task_id."""
+        matches = list(self.archive_path.glob(f"**/{task_id}_*.json"))
+        if not matches:
+            raise FileNotFoundError(f"Archived task not found for: {task_id}")
+        return matches[0]
+
     def list_incomplete_task_ids(self) -> List[str]:
         """List task IDs that are not completed or failed."""
         incomplete: List[str] = []
@@ -176,3 +183,24 @@ class WorkingStateManager:
         
         logger.info(f"Archived task {task_id} to {archive_file}")
         return archive_file
+
+    def write_voice_session(self, session: Dict[str, Any], archive_dir: Path) -> Path:
+        """Write a VoiceSession artifact alongside archived tasks."""
+        session_id = session.get("session_id")
+        if not session_id:
+            raise ValueError("VoiceSession missing session_id")
+
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        session_path = archive_dir / f"{session_id}.json"
+        with open(session_path, "w") as f:
+            json.dump(session, f, indent=2)
+        logger.info(f"Wrote voice session artifact to {session_path}")
+        return session_path
+
+    def load_voice_session(self, session_id: str) -> Dict[str, Any]:
+        """Load a VoiceSession artifact from archive."""
+        session_name = f"{session_id}.json"
+        for session_path in self.archive_path.glob(f"**/{session_name}"):
+            with open(session_path, "r") as f:
+                return json.load(f)
+        raise FileNotFoundError(f"Voice session artifact not found: {session_id}")

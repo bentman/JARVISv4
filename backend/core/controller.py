@@ -3,7 +3,7 @@ import asyncio
 import json
 import time
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 
 from backend.core.config.settings import Settings, load_settings
@@ -732,13 +732,6 @@ class ECFController:
                 }
             },
             {
-                "description": "Capture audio path input",
-                "tool": "text_output",
-                "tool_params": {
-                    "text": audio_file_path
-                }
-            },
-            {
                 "description": "Transcribe captured audio to text",
                 "tool": "voice_stt",
                 "tool_params": stt_params
@@ -773,14 +766,112 @@ class ECFController:
             use_executor=False
         )
 
+        archive_path: Optional[Path] = None
         if self.state != ControllerState.FAILED:
             self.state = ControllerState.ARCHIVING
             logger.info(f"Transitioning to {self.state.value}")
             self.state_manager.update_task(task_id, {"status": "COMPLETED"})
-            self.state_manager.archive_task(task_id)
+            archive_path = self.state_manager.archive_task(task_id)
             self.state = ControllerState.COMPLETED
             logger.info(f"Voice lifecycle {task_id} COMPLETED and ARCHIVED.")
         else:
             logger.error(f"Voice lifecycle {task_id} halted in FAILED state.")
+            try:
+                archive_path = self.state_manager.find_archived_task_path(task_id)
+            except FileNotFoundError:
+                archive_path = None
+
+        if archive_path:
+            self._write_voice_session(task_id, archive_path)
 
         return task_id
+
+    def _build_voice_session(
+        self,
+        task_id: str,
+        archive_path: Path,
+        task_state: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        completed_steps = task_state.get("completed_steps", [])
+        step_entries: List[Tuple[str, int]] = []
+        for step in completed_steps:
+            tool_name = step.get("tool_name") or "unknown"
+            index = step.get("index")
+            if index is None:
+                continue
+            step_key = tool_name
+            if any(existing[0] == step_key for existing in step_entries):
+                step_key = f"{tool_name}_{index}"
+            step_entries.append((step_key, index))
+
+        created_at = task_state.get("metadata", {}).get("created_at")
+        completed_at = None
+        if completed_steps:
+            completed_at = completed_steps[-1].get("completed_at")
+
+        return {
+            "session_id": f"voice_session_{task_id}",
+            "task_id": task_id,
+            "status": task_state.get("status"),
+            "failure_cause": task_state.get("failure_cause"),
+            "created_at": created_at,
+            "completed_at": completed_at,
+            "step_order": [entry[0] for entry in step_entries],
+            "step_artifacts": {
+                entry[0]: {
+                    "archive_path": str(archive_path),
+                    "completed_step_index": entry[1]
+                }
+                for entry in step_entries
+            }
+        }
+
+    def _write_voice_session(self, task_id: str, archive_path: Path) -> Path:
+        task_state = json.loads(archive_path.read_text())
+        archive_dir = archive_path.parent
+        session = self._build_voice_session(task_id, archive_path, task_state)
+        return self.state_manager.write_voice_session(session, archive_dir)
+
+    def replay_voice_session(self, session_id: str) -> Dict[str, Any]:
+        """Validate a VoiceSession artifact without re-executing tools."""
+        session = self.state_manager.load_voice_session(session_id)
+        step_order = session.get("step_order", [])
+        step_artifacts = session.get("step_artifacts", {})
+        errors: List[str] = []
+
+        for step_key in step_order:
+            entry = step_artifacts.get(step_key)
+            if not entry:
+                errors.append(f"Missing artifact reference for {step_key}")
+                continue
+            archive_path = entry.get("archive_path")
+            step_index = entry.get("completed_step_index")
+            if archive_path is None or step_index is None:
+                errors.append(f"Invalid artifact reference for {step_key}")
+                continue
+            archive_file = Path(archive_path)
+            if not archive_file.exists():
+                errors.append(f"Archive file missing for {step_key}: {archive_path}")
+                continue
+            task_state = json.loads(archive_file.read_text())
+            completed_steps = task_state.get("completed_steps", [])
+            if not isinstance(step_index, int) or step_index >= len(completed_steps):
+                errors.append(f"Completed step index invalid for {step_key}: {step_index}")
+                continue
+            recorded_tool = completed_steps[step_index].get("tool_name")
+            expected_tool = step_key
+            suffix = f"_{step_index}"
+            if step_key.endswith(suffix):
+                expected_tool = step_key[: -len(suffix)]
+            if recorded_tool != expected_tool:
+                errors.append(
+                    f"Tool mismatch for {step_key}: recorded={recorded_tool} expected={expected_tool}"
+                )
+
+        status = "COMPLETED" if not errors else "FAILED"
+        return {
+            "session_id": session_id,
+            "status": status,
+            "errors": errors,
+            "validated_steps": len(step_order) if not errors else 0
+        }
