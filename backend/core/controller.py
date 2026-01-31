@@ -981,3 +981,174 @@ class ECFController:
             "errors": errors,
             "validated_steps": len(step_order) if not errors else 0
         }
+
+    async def run_research_lifecycle(
+        self,
+        query: str,
+        synthesis_text: str,
+        provider: str = "duckduckgo",
+        max_results: int = 5
+    ) -> str:
+        """
+        Execute the canonical research lifecycle using deterministic, fixed steps.
+        Orchestration-only: uses existing tools verbatim and archives the result.
+        """
+        self.last_error = None
+        self.state = ControllerState.EXECUTING
+
+        next_steps = [
+            {
+                "description": "Search the web for external research inputs",
+                "tool": "web_search",
+                "tool_params": {
+                    "query": query,
+                    "provider": provider,
+                    "max_results": max_results
+                }
+            },
+            {
+                "description": "Persist deterministic research synthesis",
+                "tool": "text_output",
+                "tool_params": {
+                    "text": synthesis_text
+                }
+            }
+        ]
+
+        task_id = self.state_manager.create_task({
+            "goal": "research_lifecycle",
+            "domain": "research",
+            "constraints": ["deterministic"],
+            "next_steps": next_steps
+        })
+
+        await self._execute_with_workflow_engine(
+            task_id,
+            goal="research_lifecycle",
+            use_executor=False
+        )
+
+        task_state = self.state_manager.load_task(task_id)
+        completed_steps = task_state.get("completed_steps", [])
+        for step in completed_steps:
+            if step.get("tool_name") != "web_search":
+                continue
+            raw_result = step.get("artifact")
+            step["artifact"] = {
+                "query": query,
+                "provider": provider,
+                "max_results": max_results,
+                "result": raw_result
+            }
+        if completed_steps:
+            self.state_manager.update_task(task_id, {"completed_steps": completed_steps})
+
+        archive_path: Optional[Path] = None
+        if self.state != ControllerState.FAILED:
+            self.state = ControllerState.ARCHIVING
+            logger.info(f"Transitioning to {self.state.value}")
+            self.state_manager.update_task(task_id, {"status": "COMPLETED"})
+            archive_path = self.state_manager.archive_task(task_id)
+            self.state = ControllerState.COMPLETED
+            logger.info(f"Research lifecycle {task_id} COMPLETED and ARCHIVED.")
+        else:
+            logger.error(f"Research lifecycle {task_id} halted in FAILED state.")
+            try:
+                archive_path = self.state_manager.find_archived_task_path(task_id)
+            except FileNotFoundError:
+                archive_path = None
+
+        if archive_path:
+            self._write_research_session(task_id, archive_path)
+
+        return task_id
+
+    def _build_research_session(
+        self,
+        task_id: str,
+        archive_path: Path,
+        task_state: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        completed_steps = task_state.get("completed_steps", [])
+        step_entries: List[Tuple[str, int]] = []
+        for step in completed_steps:
+            tool_name = step.get("tool_name") or "unknown"
+            index = step.get("index")
+            if index is None:
+                continue
+            step_key = tool_name
+            if any(existing[0] == step_key for existing in step_entries):
+                step_key = f"{tool_name}_{index}"
+            step_entries.append((step_key, index))
+
+        created_at = task_state.get("metadata", {}).get("created_at")
+        completed_at = None
+        if completed_steps:
+            completed_at = completed_steps[-1].get("completed_at")
+
+        return {
+            "session_id": f"research_session_{task_id}",
+            "task_id": task_id,
+            "status": task_state.get("status"),
+            "failure_cause": task_state.get("failure_cause"),
+            "created_at": created_at,
+            "completed_at": completed_at,
+            "step_order": [entry[0] for entry in step_entries],
+            "step_artifacts": {
+                entry[0]: {
+                    "archive_path": str(archive_path),
+                    "completed_step_index": entry[1]
+                }
+                for entry in step_entries
+            }
+        }
+
+    def _write_research_session(self, task_id: str, archive_path: Path) -> Path:
+        task_state = json.loads(archive_path.read_text())
+        archive_dir = archive_path.parent
+        session = self._build_research_session(task_id, archive_path, task_state)
+        return self.state_manager.write_research_session(session, archive_dir)
+
+    def replay_research_session(self, session_id: str) -> Dict[str, Any]:
+        """Validate a ResearchSession artifact without re-executing tools."""
+        session = self.state_manager.load_research_session(session_id)
+        step_order = session.get("step_order", [])
+        step_artifacts = session.get("step_artifacts", {})
+        errors: List[str] = []
+
+        for step_key in step_order:
+            entry = step_artifacts.get(step_key)
+            if not entry:
+                errors.append(f"Missing artifact reference for {step_key}")
+                continue
+            archive_path = entry.get("archive_path")
+            step_index = entry.get("completed_step_index")
+            if archive_path is None or step_index is None:
+                errors.append(f"Invalid artifact reference for {step_key}")
+                continue
+            archive_file = Path(archive_path)
+            if not archive_file.exists():
+                errors.append(f"Archive file missing for {step_key}: {archive_path}")
+                continue
+            task_state = json.loads(archive_file.read_text())
+            completed_steps = task_state.get("completed_steps", [])
+            if not isinstance(step_index, int) or step_index >= len(completed_steps):
+                errors.append(f"Completed step index invalid for {step_key}: {step_index}")
+                continue
+            recorded_tool = completed_steps[step_index].get("tool_name")
+            expected_tool = step_key
+            suffix = f"_{step_index}"
+            if step_key.endswith(suffix):
+                expected_tool = step_key[: -len(suffix)]
+            if recorded_tool != expected_tool:
+                errors.append(
+                    f"Tool mismatch for {step_key}: recorded={recorded_tool} expected={expected_tool}"
+                )
+
+        status = "COMPLETED" if not errors else "FAILED"
+        return {
+            "session_id": session_id,
+            "status": status,
+            "errors": errors,
+            "validated_steps": len(step_order) if not errors else 0
+        }

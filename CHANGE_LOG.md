@@ -15,6 +15,15 @@
 
 ## Entries
 
+- 2026-01-31 10:58
+  - Summary: Added research lifecycle orchestration with deterministic web_search → text_output flow, ResearchSession artifact creation, and validation-only replay coverage.
+  - Scope: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_research_lifecycle_orchestration.py`, `SYSTEM_INVENTORY.md`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-30 20:24
   - Summary: Added VoiceSession metrics sidecar generation from archived voice lifecycle artifacts and captured per-step timing fields for deterministic observability.
   - Scope: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`

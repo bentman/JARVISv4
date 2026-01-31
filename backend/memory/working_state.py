@@ -223,3 +223,24 @@ class WorkingStateManager:
             with open(session_path, "r") as f:
                 return json.load(f)
         raise FileNotFoundError(f"Voice session artifact not found: {session_id}")
+
+    def write_research_session(self, session: Dict[str, Any], archive_dir: Path) -> Path:
+        """Write a ResearchSession artifact alongside archived tasks."""
+        session_id = session.get("session_id")
+        if not session_id:
+            raise ValueError("ResearchSession missing session_id")
+
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        session_path = archive_dir / f"{session_id}.json"
+        with open(session_path, "w") as f:
+            json.dump(session, f, indent=2)
+        logger.info(f"Wrote research session artifact to {session_path}")
+        return session_path
+
+    def load_research_session(self, session_id: str) -> Dict[str, Any]:
+        """Load a ResearchSession artifact from archive."""
+        session_name = f"{session_id}.json"
+        for session_path in self.archive_path.glob(f"**/{session_name}"):
+            with open(session_path, "r") as f:
+                return json.load(f)
+        raise FileNotFoundError(f"Research session artifact not found: {session_id}")

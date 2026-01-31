@@ -18,6 +18,15 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Research lifecycle orchestration (web_search → text_output → archive) with ResearchSession artifact + validation-only replay
+  - **State**: Verified
+  - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_research_lifecycle_orchestration.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - **Capability**: VoiceSession metrics sidecar (per-step timing fields + session duration)
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`
