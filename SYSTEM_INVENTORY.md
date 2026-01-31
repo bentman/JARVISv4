@@ -18,6 +18,17 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: VoiceSession metrics sidecar (per-step timing fields + session duration)
+  - **State**: Verified
+  - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - **Capability**: VoiceSession artifact + validation-only replay contract (references archived task steps, verifies tool alignment)
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`

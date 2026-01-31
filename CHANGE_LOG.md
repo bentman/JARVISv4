@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-30 20:24
+  - Summary: Added VoiceSession metrics sidecar generation from archived voice lifecycle artifacts and captured per-step timing fields for deterministic observability.
+  - Scope: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-30 19:50
   - Summary: Added VoiceSession artifact creation with validation-only replay contract and tightened replay integrity checks; updated voice lifecycle + session agentic tests to enforce contract constraints.
   - Scope: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_lifecycle_orchestration.py`, `tests/agentic/test_voice_session_replay.py`

@@ -46,6 +46,23 @@ async def test_voice_session_creation_and_replay(tmp_path, monkeypatch):
         assert "archive_path" in entry
         assert "completed_step_index" in entry
 
+    metrics_path = list((tasks_path / "archive").rglob(f"{session_id}_metrics.json"))
+    assert len(metrics_path) == 1, "VoiceSession metrics sidecar should be archived"
+
+    with open(metrics_path[0], "r") as f:
+        metrics = json.load(f)
+
+    assert metrics["session_id"] == session_id
+    assert metrics["task_id"] == task_id
+    assert "session_duration_ms" in metrics
+    assert len(metrics["steps"]) == len(session["step_order"])
+    for entry in metrics["steps"]:
+        assert entry["step_name"] in session["step_order"]
+        assert "tool_name" in entry
+        assert "status" in entry
+        assert "duration_ms_tool" in entry
+        assert "duration_ms_wall" in entry
+
     replay_result = controller.replay_voice_session(session_id)
     assert replay_result["status"] == "COMPLETED"
     assert replay_result["validated_steps"] == len(session["step_order"])

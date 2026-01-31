@@ -2,6 +2,7 @@ import logging
 import asyncio
 import json
 import time
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
@@ -44,18 +45,48 @@ class SimpleToolNode(BaseNode):
     
     async def execute(self, context: TaskContext, results: dict) -> dict:
         """Execute the tool and return the result."""
+        start_wall = time.monotonic()
+        started_at = datetime.now().isoformat()
         if self.executor:
             try:
-                return await self.executor.execute_step(self.description, {
+                result = await self.executor.execute_step(self.description, {
                     "tool": self.tool_name,
                     "params": self.tool_params
                 })
+                end_wall = time.monotonic()
+                tool_name = result.get("tool") or self.tool_name
+                tool_params = result.get("params") or self.tool_params
+                status = result.get("status", "SUCCESS")
+                error = result.get("error")
+                if status == "FAILED":
+                    return {
+                        "tool_name": tool_name,
+                        "tool_params": tool_params,
+                        "status": "FAILED",
+                        "error": error or "tool execution failed",
+                        "started_at": started_at,
+                        "completed_at": datetime.now().isoformat(),
+                        "duration_ms_wall": (end_wall - start_wall) * 1000
+                    }
+                return {
+                    "result": result,
+                    "tool_name": tool_name,
+                    "tool_params": tool_params,
+                    "status": "SUCCESS",
+                    "started_at": started_at,
+                    "completed_at": datetime.now().isoformat(),
+                    "duration_ms_wall": (end_wall - start_wall) * 1000
+                }
             except Exception as exc:
+                end_wall = time.monotonic()
                 return {
                     "status": "FAILED",
                     "error": str(exc),
                     "tool": self.tool_name,
-                    "params": self.tool_params
+                    "params": self.tool_params,
+                    "started_at": started_at,
+                    "completed_at": datetime.now().isoformat(),
+                    "duration_ms_wall": (end_wall - start_wall) * 1000
                 }
         tool = self.registry.get_tool(self.tool_name)
         if not tool:
@@ -64,21 +95,29 @@ class SimpleToolNode(BaseNode):
         # Execute the tool with the predefined parameters
         try:
             result = await tool.execute(**self.tool_params)
+            end_wall = time.monotonic()
             return {
                 "node_id": self.id,
                 "tool_name": self.tool_name,
                 "tool_params": self.tool_params,
                 "result": result,
-                "status": "SUCCESS"
+                "status": "SUCCESS",
+                "started_at": started_at,
+                "completed_at": datetime.now().isoformat(),
+                "duration_ms_wall": (end_wall - start_wall) * 1000
             }
         except Exception as e:
+            end_wall = time.monotonic()
             return {
                 "node_id": self.id,
                 "tool_name": self.tool_name,
                 "tool_params": self.tool_params,
                 "result": None,
                 "status": "FAILED",
-                "error": str(e)
+                "error": str(e),
+                "started_at": started_at,
+                "completed_at": datetime.now().isoformat(),
+                "duration_ms_wall": (end_wall - start_wall) * 1000
             }
 
 class ControllerState(Enum):
@@ -624,7 +663,13 @@ class ECFController:
                         if tool_name == "none":
                             raise RuntimeError("execution_step_failed: no_tool")
                         raise RuntimeError(error or "tool execution failed")
-                    artifact = str(node_result.get("result", ""))
+                    result_payload = node_result.get("result")
+                    resolved_payload = result_payload
+                    if isinstance(result_payload, dict) and {"result", "status", "tool"}.issubset(result_payload.keys()):
+                        resolved_payload = result_payload.get("result")
+                    artifact = resolved_payload
+                    if not isinstance(resolved_payload, dict):
+                        artifact = str(resolved_payload) if resolved_payload is not None else ""
                     
                     # Update task state
                     task_state = self.state_manager.load_task(task_id)
@@ -647,13 +692,20 @@ class ECFController:
                         result=str(node_result.get("result")) if node_result.get("result") is not None else None,
                         error=error
                     )
+                    duration_ms_tool = None
+                    if isinstance(resolved_payload, dict):
+                        duration_ms_tool = resolved_payload.get("duration_ms")
                     self.state_manager.complete_step(
                         task_id,
                         step_index=index,
                         outcome="SUCCESS",
                         artifact=artifact,
                         tool_name=tool_name,
-                        tool_params=tool_params
+                        tool_params=tool_params,
+                        started_at=node_result.get("started_at"),
+                        completed_at=node_result.get("completed_at"),
+                        duration_ms_tool=duration_ms_tool,
+                        duration_ms_wall=node_result.get("duration_ms_wall")
                     )
                     
                     # Update next_steps to remove completed step
@@ -782,7 +834,8 @@ class ECFController:
                 archive_path = None
 
         if archive_path:
-            self._write_voice_session(task_id, archive_path)
+            session_path = self._write_voice_session(task_id, archive_path)
+            self._write_voice_session_metrics(session_path, archive_path)
 
         return task_id
 
@@ -831,6 +884,59 @@ class ECFController:
         archive_dir = archive_path.parent
         session = self._build_voice_session(task_id, archive_path, task_state)
         return self.state_manager.write_voice_session(session, archive_dir)
+
+    def _write_voice_session_metrics(self, session_path: Path, archive_path: Path) -> Path:
+        session = json.loads(session_path.read_text())
+        task_state = json.loads(archive_path.read_text())
+        session_id = session.get("session_id")
+        if not session_id:
+            raise ValueError("VoiceSession metrics missing session_id")
+
+        created_at = session.get("created_at")
+        completed_at = session.get("completed_at")
+        session_duration_ms = None
+        if created_at and completed_at:
+            try:
+                start = datetime.fromisoformat(created_at)
+                end = datetime.fromisoformat(completed_at)
+                session_duration_ms = (end - start).total_seconds() * 1000
+            except ValueError:
+                session_duration_ms = None
+
+        completed_steps = task_state.get("completed_steps", [])
+        step_metrics: List[Dict[str, Any]] = []
+        for step_key in session.get("step_order", []):
+            entry = session.get("step_artifacts", {}).get(step_key)
+            if not entry:
+                continue
+            step_index = entry.get("completed_step_index")
+            if not isinstance(step_index, int) or step_index >= len(completed_steps):
+                continue
+            step_state = completed_steps[step_index]
+            tool_name = step_state.get("tool_name")
+            tool_params = step_state.get("tool_params", {}) or {}
+            duration_ms_tool = step_state.get("duration_ms_tool")
+            duration_ms_wall = step_state.get("duration_ms_wall")
+
+            step_metrics.append({
+                "step_name": step_key,
+                "tool_name": tool_name,
+                "status": step_state.get("outcome"),
+                "duration_ms_tool": duration_ms_tool,
+                "duration_ms_wall": duration_ms_wall,
+                "tool_params": tool_params,
+            })
+
+        metrics = {
+            "session_id": session_id,
+            "task_id": session.get("task_id"),
+            "status": session.get("status"),
+            "failure_cause": session.get("failure_cause"),
+            "session_duration_ms": session_duration_ms,
+            "steps": step_metrics,
+        }
+
+        return self.state_manager.write_voice_session_metrics(session_id, metrics, archive_path.parent)
 
     def replay_voice_session(self, session_id: str) -> Dict[str, Any]:
         """Validate a VoiceSession artifact without re-executing tools."""

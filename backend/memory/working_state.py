@@ -142,7 +142,11 @@ class WorkingStateManager:
         outcome: str, 
         artifact: Optional[str] = None,
         tool_name: Optional[str] = None,
-        tool_params: Optional[Dict[str, Any]] = None
+        tool_params: Optional[Dict[str, Any]] = None,
+        started_at: Optional[str] = None,
+        completed_at: Optional[str] = None,
+        duration_ms_tool: Optional[float] = None,
+        duration_ms_wall: Optional[float] = None
     ) -> Dict[str, Any]:
         """Mark current step as completed."""
         state = self.load_task(task_id)
@@ -160,7 +164,10 @@ class WorkingStateManager:
             "artifact": artifact,
             "tool_name": tool_name,
             "tool_params": tool_params,
-            "completed_at": datetime.now().isoformat()
+            "started_at": started_at,
+            "completed_at": completed_at or datetime.now().isoformat(),
+            "duration_ms_tool": duration_ms_tool,
+            "duration_ms_wall": duration_ms_wall
         }
         
         state["completed_steps"].append(completed_step)
@@ -196,6 +203,18 @@ class WorkingStateManager:
             json.dump(session, f, indent=2)
         logger.info(f"Wrote voice session artifact to {session_path}")
         return session_path
+
+    def write_voice_session_metrics(self, session_id: str, metrics: Dict[str, Any], archive_dir: Path) -> Path:
+        """Write VoiceSession metrics sidecar alongside the VoiceSession artifact."""
+        if not session_id:
+            raise ValueError("VoiceSession metrics missing session_id")
+
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        metrics_path = archive_dir / f"{session_id}_metrics.json"
+        with open(metrics_path, "w") as f:
+            json.dump(metrics, f, indent=2)
+        logger.info(f"Wrote voice session metrics to {metrics_path}")
+        return metrics_path
 
     def load_voice_session(self, session_id: str) -> Dict[str, Any]:
         """Load a VoiceSession artifact from archive."""
