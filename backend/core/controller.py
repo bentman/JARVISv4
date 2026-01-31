@@ -14,7 +14,7 @@ from backend.agents.executor.executor import ExecutorAgent, EXECUTOR_SYSTEM_PROM
 from backend.tools.registry.registry import ToolRegistry
 from backend.tools.web_search import WebSearchTool
 from backend.tools.text_output import TextOutputTool
-from backend.tools.voice import VoiceSTTTool, VoiceTTSTool
+from backend.tools.voice import VoiceSTTTool, VoiceTTSTool, VoiceWakeWordTool
 from backend.memory.stores.trace_store import TraceStore
 from backend.controller.engine.engine import WorkflowEngine
 from backend.controller.engine.types import TaskContext, NodeType
@@ -135,6 +135,7 @@ class ECFController:
         self.registry.register_tool(TextOutputTool())
         self.registry.register_tool(VoiceSTTTool())
         self.registry.register_tool(VoiceTTSTool())
+        self.registry.register_tool(VoiceWakeWordTool())
         
         # Initialize Workflow Engine
         self.workflow_engine = WorkflowEngine()
@@ -511,7 +512,12 @@ class ECFController:
         finally:
             await self.llm.close()
 
-    async def _convert_plan_to_workflow_nodes(self, task_id: str, goal: str) -> List[str]:
+    async def _convert_plan_to_workflow_nodes(
+        self,
+        task_id: str,
+        goal: str,
+        use_executor: bool = True
+    ) -> List[str]:
         """Convert plan steps to WorkflowEngine nodes and return node IDs."""
         task_state = self.state_manager.load_task(task_id)
         next_steps = task_state.get("next_steps", [])
@@ -560,17 +566,23 @@ class ECFController:
                 tool_params=tool_params,
                 registry=self.registry,
                 dependencies=dependencies,
-                executor=self.executor
+                executor=self.executor if use_executor else None
             )
             self.workflow_engine.add_node(node)
             node_ids.append(node_id)
             
         return node_ids
 
-    async def _execute_with_workflow_engine(self, task_id: str, goal: str, max_steps: Optional[int] = None) -> int:
+    async def _execute_with_workflow_engine(
+        self,
+        task_id: str,
+        goal: str,
+        max_steps: Optional[int] = None,
+        use_executor: bool = True
+    ) -> int:
         """Execute remaining steps using WorkflowEngine."""
         # Convert plan steps to workflow nodes
-        node_ids = await self._convert_plan_to_workflow_nodes(task_id, goal)
+        node_ids = await self._convert_plan_to_workflow_nodes(task_id, goal, use_executor=use_executor)
         if not node_ids:
             logger.info("No executable steps found for workflow engine")
             return 0
@@ -686,3 +698,89 @@ class ECFController:
             self.state_manager.archive_task(task_id, reason="failed_execute")
             self.state = ControllerState.FAILED
             return 0
+
+    async def run_voice_lifecycle(
+        self,
+        audio_file_path: str,
+        threshold: float = 0.5,
+        stt_model: str = "base",
+        stt_language: Optional[str] = None,
+        tts_voice: str = "default",
+        agent_text: str = "voice_response"
+    ) -> str:
+        """
+        Execute the canonical voice lifecycle using deterministic, fixed steps.
+        Orchestration-only: uses existing tools verbatim and archives the result.
+        """
+        self.last_error = None
+        self.state = ControllerState.EXECUTING
+
+        stt_params: Dict[str, Any] = {
+            "audio_file_path": audio_file_path,
+            "model": stt_model
+        }
+        if stt_language is not None:
+            stt_params["language"] = stt_language
+
+        next_steps = [
+            {
+                "description": "Detect wake word from captured audio",
+                "tool": "voice_wake_word",
+                "tool_params": {
+                    "audio_file_path": audio_file_path,
+                    "threshold": threshold
+                }
+            },
+            {
+                "description": "Capture audio path input",
+                "tool": "text_output",
+                "tool_params": {
+                    "text": audio_file_path
+                }
+            },
+            {
+                "description": "Transcribe captured audio to text",
+                "tool": "voice_stt",
+                "tool_params": stt_params
+            },
+            {
+                "description": "Agent execution (deterministic text output)",
+                "tool": "text_output",
+                "tool_params": {
+                    "text": agent_text
+                }
+            },
+            {
+                "description": "Synthesize speech from agent output",
+                "tool": "voice_tts",
+                "tool_params": {
+                    "text": "--help",
+                    "voice": tts_voice
+                }
+            }
+        ]
+
+        task_id = self.state_manager.create_task({
+            "goal": "voice_lifecycle",
+            "domain": "voice",
+            "constraints": ["deterministic"],
+            "next_steps": next_steps
+        })
+
+        await self._execute_with_workflow_engine(
+            task_id,
+            goal="voice_lifecycle",
+            use_executor=False
+        )
+
+        if self.state != ControllerState.FAILED:
+            self.state = ControllerState.ARCHIVING
+            logger.info(f"Transitioning to {self.state.value}")
+            self.state_manager.update_task(task_id, {"status": "COMPLETED"})
+            self.state_manager.archive_task(task_id)
+            self.state = ControllerState.COMPLETED
+            logger.info(f"Voice lifecycle {task_id} COMPLETED and ARCHIVED.")
+        else:
+            logger.error(f"Voice lifecycle {task_id} halted in FAILED state.")
+
+        return task_id

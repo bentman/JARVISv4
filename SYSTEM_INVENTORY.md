@@ -18,6 +18,17 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: End-to-end voice lifecycle orchestration (wake_word → capture → STT → agent → TTS → archive) with deterministic archival and failure semantics
+  - **State**: Verified
+  - **Location**: `backend/core/controller.py`, `tests/agentic/test_voice_lifecycle_orchestration.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - **Capability**: Voice API endpoints (STT/TTS/Wake Word) as pass-through wrappers over voice tools
   - **State**: Verified
   - **Location**: `backend/api/app.py`, `backend/api/models.py`, `backend/tools/voice.py`

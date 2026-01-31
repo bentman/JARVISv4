@@ -15,6 +15,17 @@
 
 ## Entries
 
+- 2026-01-30 19:18
+  - Summary: Added controller-level end-to-end voice lifecycle orchestration with fixed deterministic step order (wake_word → STT → agent → TTS → archive), registered VoiceWakeWordTool, and added an agentic lifecycle orchestration test.
+  - Scope: `backend/core/controller.py`, `tests/agentic/test_voice_lifecycle_orchestration.py`
+  - Evidence: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - 2026-01-30 18:45
   - Summary: Added minimal FastAPI voice endpoints that pass through to existing voice tools without altering artifacts or provisioning behavior.
   - Scope: `backend/api/app.py`, `backend/api/models.py`
