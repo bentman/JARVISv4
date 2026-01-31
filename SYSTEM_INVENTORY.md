@@ -18,6 +18,17 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: openWakeWord provisioning under MODEL_PROVISIONING_POLICY (strict=no provisioning; on_demand/startup invoke library downloader) with deterministic provisioning artifacts
+  - **State**: Verified
+  - **Location**: `backend/core/voice/runtime.py`, `tests/unit/test_voice_runtime.py`
+  - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
+    ```text
+    Unit Tests:        PASS
+    Integration Tests: PASS
+    Agentic Tests:     PASS
+    ✅ JARVISv4 Current ./backend is validated!
+    ```
+
 - **Capability**: Wake-word detection via openWakeWord with deterministic artifacts and strict provisioning semantics
   - **State**: Verified
   - **Location**: `backend/core/voice/runtime.py`, `backend/tools/voice.py`, `tests/unit/test_voice_runtime.py`, `tests/unit/test_voice_tool.py`

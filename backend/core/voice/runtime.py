@@ -326,6 +326,56 @@ def _resolve_openwakeword_models(model_base: str) -> Tuple[Dict[str, List[str]],
     return required_patterns, presence
 
 
+_OWW_STARTUP_PROVISIONED = False
+
+
+def _provision_openwakeword_models(model_base: str) -> Dict[str, Any]:
+    oww_dir = os.path.join(model_base, "openwakeword")
+    try:
+        os.makedirs(oww_dir, exist_ok=True)
+    except OSError as exc:
+        if "Read-only file system" in str(exc):
+            return {
+                "provision_attempted": True,
+                "provisioned": False,
+                "provision_error": f"Models directory is read-only: {oww_dir}",
+            }
+        return {
+            "provision_attempted": True,
+            "provisioned": False,
+            "provision_error": f"Failed to create models directory: {exc}",
+        }
+
+    try:
+        import openwakeword.utils
+    except Exception as exc:
+        return {
+            "provision_attempted": True,
+            "provisioned": False,
+            "provision_error": f"openWakeWord utils not available: {exc}",
+        }
+
+    try:
+        openwakeword.utils.download_models(
+            model_names=["alexa", "melspectrogram", "embedding_model"],
+            target_directory=oww_dir,
+        )
+    except Exception as exc:
+        return {
+            "provision_attempted": True,
+            "provisioned": False,
+            "provision_error": f"Failed to provision openWakeWord models: {exc}",
+        }
+
+    _, presence = _resolve_openwakeword_models(model_base)
+    provisioned = all(presence.values())
+    return {
+        "provision_attempted": True,
+        "provisioned": provisioned,
+        "provision_error": None if provisioned else "Provisioning completed but models are missing",
+    }
+
+
 def run_wake_word(audio_file_path: str, threshold: float = 0.5) -> Dict[str, Any]:
     """
     Detect wake word using openWakeWord models with deterministic artifacts.
@@ -345,6 +395,7 @@ def run_wake_word(audio_file_path: str, threshold: float = 0.5) -> Dict[str, Any
     required_patterns, presence = _resolve_openwakeword_models(model_base)
     model_found = all(presence.values())
     model_error = None if model_found else "OpenWakeWord model files not found under MODEL_PATH"
+    provisioning_details: Optional[Dict[str, Any]] = None
 
     artifacts_base = {
         "detected": False,
@@ -393,6 +444,24 @@ def run_wake_word(audio_file_path: str, threshold: float = 0.5) -> Dict[str, Any
             },
             "artifacts": artifacts_base,
         }
+
+    global _OWW_STARTUP_PROVISIONED
+    if not model_found and policy in ("on_demand", "startup"):
+        if policy == "startup" and _OWW_STARTUP_PROVISIONED:
+            provisioning_details = None
+        else:
+            provisioning_details = _provision_openwakeword_models(model_base)
+            if policy == "startup":
+                _OWW_STARTUP_PROVISIONED = True
+            required_patterns, presence = _resolve_openwakeword_models(model_base)
+            model_found = all(presence.values())
+            model_error = None if model_found else "OpenWakeWord model files not found under MODEL_PATH"
+            artifacts_base["model_required"] = required_patterns
+            artifacts_base["model_found"] = model_found
+            artifacts_base["model_error"] = model_error
+
+    if provisioning_details:
+        artifacts_base.update(provisioning_details)
 
     if not model_found:
         return {
