@@ -16,8 +16,9 @@ services:
       - MODEL_PATH=/models
       - LD_LIBRARY_PATH=/usr/local/lib:/opt/whisper/bin:/opt/whisper/lib:/opt/whisper/src:/opt/llama/lib:/opt/llama/bin:/opt/piper_build/pi/lib:/usr/local/bin
     volumes:
-      - ./backend:/app # reserved: sync logic pending
+      - ./backend:/app/backend # reserved: sync logic pending
       - ./models:/models
+      - ./tasks:/app/tasks
     depends_on:
       - redis
     networks:

@@ -15,6 +15,26 @@
 
 ## Entries
 
+- 2026-02-01 04:27
+  - Summary: Mounted backend task artifacts to the host via tasks volume in dev/prod compose to unblock UI validation.
+  - Scope: `docker-compose.dev.yml`, `docker-compose.yml`
+  - Evidence: `docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate backend`; `Invoke-RestMethod -Uri http://localhost:8000/v1/tasks -Method Post -ContentType "application/json" -Body '{"goal":"Validate volume mount"}'`; `Get-Item "tasks\archive\2026-02\task_20260201_102650_5381b985_error.json" | Format-List FullName, LastWriteTime`
+    ```text
+    FullName      : E:\WORK\CODE\GitHub\bentman\Repositories\JARVISv4\tasks\archive\2026-02\task_20260201_102650_5381b985_error.json
+    LastWriteTime : 2026-02-01 4:26:50 AM
+    ```
+
+- 2026-01-31 19:36
+  - Summary: Corrected backend container entrypoint to use backend.api.app:app for dev and prod images.
+  - Scope: `backend/Dockerfile.dev`, `backend/Dockerfile`
+  - Evidence: `docker compose -f docker-compose.dev.yml build backend`; `docker compose -f docker-compose.dev.yml ps`; `docker compose -f docker-compose.dev.yml logs --tail 20 backend`; `docker compose -f docker-compose.yml build backend`; `docker compose -f docker-compose.yml ps`; `docker compose -f docker-compose.yml logs --tail 20 backend`
+    ```text
+    jarvisv4-backend-1   jarvisv4-backend-dev   "python -m uvicorn b…"   backend   9 seconds ago    Up 6 seconds
+    backend-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+    jarvisv4-backend-1   jarvisv4-backend       "python -m uvicorn b…"   backend   6 seconds ago   Up 4 seconds
+    backend-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+    ```
+
 - 2026-01-31 18:59
   - Summary: Added prod frontend service to docker-compose.yml with hardened defaults and healthcheck; relaxed read_only for frontend to support Vite runtime writes.
   - Scope: `docker-compose.yml`

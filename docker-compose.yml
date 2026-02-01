@@ -17,6 +17,7 @@ services:
     volumes:
       - jarvis_data:/app/data
       - ./models:/models:ro
+      - ./tasks:/app/tasks
     depends_on:
       - redis
     networks:

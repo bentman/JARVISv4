@@ -13,102 +13,65 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 ## States
 - Planned: intent only, not implemented
 - Implemented: code exists, not yet validated end-to-end
-- Verified: validated with evidence (command + excerpt)
+- Verified: validated with evidence (command)
 - Deferred: intentionally postponed (reason noted)
 
 ## Inventory
+
+- **Capability**: Backend task artifacts mounted to host via compose volumes
+  - **State**: Verified
+  - **Location**: `docker-compose.dev.yml`, `docker-compose.yml`
+  - **Validation**: `docker compose -f docker-compose.dev.yml up -d --no-deps --force-recreate backend`; `Invoke-RestMethod -Uri http://localhost:8000/v1/tasks -Method Post -ContentType "application/json" -Body '{"goal":"Validate volume mount"}'`; `Get-Item "tasks\archive\2026-02\task_20260201_102650_5381b985_error.json" | Format-List FullName, LastWriteTime`
+
+- **Capability**: Backend container startup (dev + prod)
+  - **State**: Verified
+  - **Location**: `backend/Dockerfile.dev`, `backend/Dockerfile`, `docker-compose.dev.yml`, `docker-compose.yml`
+  - **Validation**: `docker compose -f docker-compose.dev.yml build backend`; `docker compose -f docker-compose.dev.yml ps`; `docker compose -f docker-compose.dev.yml logs --tail 20 backend`; `docker compose -f docker-compose.yml build backend`; `docker compose -f docker-compose.yml ps`; `docker compose -f docker-compose.yml logs --tail 20 backend`
 
 - **Capability**: Prod frontend container service (Vite dev server + healthcheck, read_only disabled)
   - **State**: Verified
   - **Location**: `docker-compose.yml`, `frontend/Dockerfile`
   - **Validation**: `docker compose -f docker-compose.yml build frontend`; `docker compose -f docker-compose.yml ps`; `docker compose -f docker-compose.yml logs --tail 60 frontend`
-    ```text
-    ✔ Image jarvisv4-frontend Built
-    jarvisv4-frontend-1   jarvisv4-frontend   "docker-entrypoint.s…"   frontend   45 seconds ago   Up 45 seconds (healthy)
-    VITE v5.4.21  ready in 136 ms
-    ```
 
 - **Capability**: Frontend dev container substrate (Vite scaffold + healthcheck)
   - **State**: Verified
   - **Location**: `frontend/`, `frontend/Dockerfile`, `docker-compose.dev.yml`
   - **Validation**: `docker compose -f docker-compose.dev.yml build frontend`; `docker compose -f docker-compose.dev.yml ps`
-    ```text
-    ✔ Image jarvisv4-frontend-dev Built
-    jarvisv4-frontend-1   jarvisv4-frontend-dev   "docker-entrypoint.s…"   frontend   31 seconds ago   Up 30 seconds (healthy)
-    ```
 
 - **Capability**: Conversation lifecycle orchestration (turn_n_user/assistant → archive) with ConversationSession artifact + validation-only replay
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_conversation_lifecycle_orchestration.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: Research lifecycle orchestration (web_search → text_output → archive) with ResearchSession artifact + validation-only replay
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_research_lifecycle_orchestration.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: VoiceSession metrics sidecar (per-step timing fields + session duration)
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Unit Tests:        PASS
-    Integration Tests: PASS
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: VoiceSession artifact + validation-only replay contract (references archived task steps, verifies tool alignment)
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_voice_session_replay.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Unit Tests:        PASS
-    Integration Tests: PASS
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: End-to-end voice lifecycle orchestration (wake_word → capture → STT → agent → TTS → archive) with deterministic archival and failure semantics
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `tests/agentic/test_voice_lifecycle_orchestration.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Unit Tests:        PASS
-    Integration Tests: PASS
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: Voice API endpoints (STT/TTS/Wake Word) as pass-through wrappers over voice tools
   - **State**: Verified
   - **Location**: `backend/api/app.py`, `backend/api/models.py`, `backend/tools/voice.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Unit Tests:        PASS
-    Integration Tests: PASS
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: openWakeWord provisioning under MODEL_PROVISIONING_POLICY (strict=no provisioning; on_demand/startup invoke library downloader) with deterministic provisioning artifacts
   - **State**: Verified
   - **Location**: `backend/core/voice/runtime.py`, `tests/unit/test_voice_runtime.py`
   - **Validation**: `backend/.venv/Scripts/python scripts/validate_backend.py`
-    ```text
-    Unit Tests:        PASS
-    Integration Tests: PASS
-    Agentic Tests:     PASS
-    ✅ JARVISv4 Current ./backend is validated!
-    ```
 
 - **Capability**: Wake-word detection via openWakeWord with deterministic artifacts and strict provisioning semantics
   - **State**: Verified
