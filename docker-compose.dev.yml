@@ -63,6 +63,29 @@ services:
     networks:
       - JARVISv4_network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: jarvisv4-frontend-dev
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - JARVISv4_network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ["CMD", "node", "-e", "fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 networks:
   JARVISv4_network:
     driver: bridge

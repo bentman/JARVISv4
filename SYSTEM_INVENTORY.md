@@ -18,6 +18,25 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Prod frontend container service (Vite dev server + healthcheck, read_only disabled)
+  - **State**: Verified
+  - **Location**: `docker-compose.yml`, `frontend/Dockerfile`
+  - **Validation**: `docker compose -f docker-compose.yml build frontend`; `docker compose -f docker-compose.yml ps`; `docker compose -f docker-compose.yml logs --tail 60 frontend`
+    ```text
+    ✔ Image jarvisv4-frontend Built
+    jarvisv4-frontend-1   jarvisv4-frontend   "docker-entrypoint.s…"   frontend   45 seconds ago   Up 45 seconds (healthy)
+    VITE v5.4.21  ready in 136 ms
+    ```
+
+- **Capability**: Frontend dev container substrate (Vite scaffold + healthcheck)
+  - **State**: Verified
+  - **Location**: `frontend/`, `frontend/Dockerfile`, `docker-compose.dev.yml`
+  - **Validation**: `docker compose -f docker-compose.dev.yml build frontend`; `docker compose -f docker-compose.dev.yml ps`
+    ```text
+    ✔ Image jarvisv4-frontend-dev Built
+    jarvisv4-frontend-1   jarvisv4-frontend-dev   "docker-entrypoint.s…"   frontend   31 seconds ago   Up 30 seconds (healthy)
+    ```
+
 - **Capability**: Conversation lifecycle orchestration (turn_n_user/assistant → archive) with ConversationSession artifact + validation-only replay
   - **State**: Verified
   - **Location**: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_conversation_lifecycle_orchestration.py`

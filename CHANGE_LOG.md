@@ -15,6 +15,25 @@
 
 ## Entries
 
+- 2026-01-31 18:59
+  - Summary: Added prod frontend service to docker-compose.yml with hardened defaults and healthcheck; relaxed read_only for frontend to support Vite runtime writes.
+  - Scope: `docker-compose.yml`
+  - Evidence: `docker compose -f docker-compose.yml build frontend`; `docker compose -f docker-compose.yml ps`; `docker compose -f docker-compose.yml logs --tail 60 frontend`
+    ```text
+    ✔ Image jarvisv4-frontend Built
+    jarvisv4-frontend-1   jarvisv4-frontend   "docker-entrypoint.s…"   frontend   45 seconds ago   Up 45 seconds (healthy)
+    VITE v5.4.21  ready in 136 ms
+    ```
+
+- 2026-01-31 18:48
+  - Summary: Added minimal frontend Vite scaffold and dev container service with healthcheck for the UI substrate.
+  - Scope: `frontend/`, `frontend/Dockerfile`, `docker-compose.dev.yml`
+  - Evidence: `docker compose -f docker-compose.dev.yml build frontend`; `docker compose -f docker-compose.dev.yml ps`
+    ```text
+    ✔ Image jarvisv4-frontend-dev Built
+    jarvisv4-frontend-1   jarvisv4-frontend-dev   "docker-entrypoint.s…"   frontend   31 seconds ago   Up 30 seconds (healthy)
+    ```
+
 - 2026-01-31 11:12
   - Summary: Added conversation lifecycle orchestration with deterministic turn persistence, ConversationSession artifact creation, and validation-only replay coverage.
   - Scope: `backend/core/controller.py`, `backend/memory/working_state.py`, `tests/agentic/test_conversation_lifecycle_orchestration.py`, `SYSTEM_INVENTORY.md`
