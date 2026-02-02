@@ -138,7 +138,11 @@ data/*
 *.db
 *.sqlite3
 
-# Agents
+# Tasks
+tasks/
+!tasks/*.md
+
+# Agentic Coding
 .aider*
 .clineignore
 .clinerules/
