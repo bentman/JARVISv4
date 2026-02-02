@@ -15,6 +15,35 @@
 
 ## Entries
 
+- 2026-02-02 13:11
+  - Summary: Documented minimal task submission UI integration with backend task creation (LLM failure accepted for validation).
+  - Scope: `frontend/src/main.jsx`, `frontend/vite.config.js`
+  - Evidence: `docker compose logs backend --tail 40`; `Get-ChildItem tasks/archive/2026-02 -File | Sort-Object LastWriteTime -Descending | Select-Object -First 3 Name, LastWriteTime`
+    ```text
+    backend-1  | INFO:     172.18.0.2:60710 - "POST /v1/tasks HTTP/1.1" 200 OK
+    Name                                     LastWriteTime
+    ----                                     -------------
+    task_20260202_183844_76c8f289_error.json 2026-02-02 12:38:54 PM
+    ```
+
+- 2026-02-02 12:03
+  - Summary: Fixed prod backend task archival by running backend as root (local-first posture).
+  - Scope: `docker-compose.yml`
+  - Evidence: `curl.exe -s -X POST http://localhost:8000/v1/tasks -H "Content-Type: application/json" -d '{"goal":"Test prod archival 20260202_180320"}'`; `Get-ChildItem tasks/archive/2026-02 -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name, LastWriteTime`
+    ```text
+    Name                                     LastWriteTime
+    ----                                     -------------
+    task_20260202_180320_65c336a2_error.json 2026-02-02 12:03:30 PM
+    ```
+
+- 2026-02-02 06:50
+  - Summary: Investigated prod task archive failure; permission errors persist despite compose changes (incomplete).
+  - Scope: `docker-compose.yml`
+  - Evidence: `docker compose -f docker-compose.yml logs backend --tail 80`
+    ```text
+    PermissionError: [Errno 13] Permission denied: 'tasks/task_20260202_123835_339d4a29.json' -> 'tasks/archive/2026-02/task_20260202_123835_339d4a29_error.json'
+    ```
+
 - 2026-02-01 04:27
   - Summary: Mounted backend task artifacts to the host via tasks volume in dev/prod compose to unblock UI validation.
   - Scope: `docker-compose.dev.yml`, `docker-compose.yml`

@@ -1,0 +1,16 @@
+{
+  "task_id": "task_20260202_182034_dc7770d1",
+  "goal": "UI validation test dev",
+  "status": "FAILED",
+  "domain": "general",
+  "constraints": [],
+  "current_step": null,
+  "completed_steps": [],
+  "next_steps": [],
+  "metadata": {
+    "created_at": "2026-02-02T18:20:34.595900",
+    "priority": "normal"
+  },
+  "error": "LLMProviderError: LLM request failed after 3 attempts. Last error: Connection error.",
+  "failure_cause": "controller_error"
+}

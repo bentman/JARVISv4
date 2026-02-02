@@ -7,13 +7,18 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     image: jarvisv4-backend
+    user: "0"
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4.db
       - REDIS_URL=redis://redis:6379/0
       - MODEL_PATH=/models
       - LD_LIBRARY_PATH=/usr/local/lib:/opt/whisper/bin:/opt/whisper/lib:/opt/whisper/src:/opt/llama/lib:/opt/llama/bin:/opt/piper_build/pi/lib:/usr/local/bin
+    command: >
+      sh -c "chown -R appuser:appuser /app/tasks && python -m uvicorn backend.api.app:app --host 0.0.0.0 --port 8000 --workers 4"
     volumes:
       - jarvis_data:/app/data
       - ./models:/models:ro
@@ -24,7 +29,6 @@ services:
       - JARVISv4_network
     security_opt:
       - no-new-privileges:true
-    read_only: true
     tmpfs:
       - /tmp
 
@@ -44,7 +48,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
     networks:
       - JARVISv4_network

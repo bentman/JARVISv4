@@ -1,0 +1,16 @@
+{
+  "task_id": "task_20260201_121800_80088d77",
+  "goal": "Dev validation goal 20260201_061800",
+  "status": "FAILED",
+  "domain": "general",
+  "constraints": [],
+  "current_step": null,
+  "completed_steps": [],
+  "next_steps": [],
+  "metadata": {
+    "created_at": "2026-02-01T12:18:00.898791",
+    "priority": "normal"
+  },
+  "error": "LLMProviderError: LLM request failed after 3 attempts. Last error: Connection error.",
+  "failure_cause": "controller_error"
+}

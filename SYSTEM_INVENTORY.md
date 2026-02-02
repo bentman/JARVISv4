@@ -18,6 +18,17 @@ Authoritative capability ledger. This is not a roadmap or config reference.
 
 ## Inventory
 
+- **Capability**: Minimal task submission UI (POST /v1/tasks) with response display
+  - **State**: Verified
+  - **Location**: `frontend/src/main.jsx`, `frontend/vite.config.js`
+  - **Validation**: `docker compose logs backend --tail 40`; `Get-ChildItem tasks/archive/2026-02 -File | Sort-Object LastWriteTime -Descending | Select-Object -First 3 Name, LastWriteTime`
+  - **Notes**: Validation accepted LLM connection failure; backend returned 200 and archived FAILED task artifact.
+
+- **Capability**: Prod task archival via root-run backend (local-first)
+  - **State**: Verified
+  - **Location**: `docker-compose.yml`
+  - **Validation**: `curl.exe -s -X POST http://localhost:8000/v1/tasks -H "Content-Type: application/json" -d '{"goal":"Test prod archival 20260202_180320"}'`; `Get-ChildItem tasks/archive/2026-02 -File | Sort-Object LastWriteTime -Descending | Select-Object -First 5 Name, LastWriteTime`
+
 - **Capability**: Backend task artifacts mounted to host via compose volumes
   - **State**: Verified
   - **Location**: `docker-compose.dev.yml`, `docker-compose.yml`

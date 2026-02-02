@@ -9,6 +9,8 @@ services:
     image: jarvisv4-backend-dev
     ports:
       - "8000:8000"
+    env_file:
+      - .env.dev
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/JARVISv4_dev.db
       - REDIS_URL=redis://redis:6379/0
@@ -72,7 +74,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_API_URL=${VITE_API_URL:-http://backend:8000}
       - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000}
     volumes:
       - ./frontend:/app
