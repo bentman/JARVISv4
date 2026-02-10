@@ -6,6 +6,7 @@
 [![Coming Soon: JARVISv5](https://img.shields.io/badge/Successor-JARVISv5-blue)](https://github.com/bentman/JARVISv5)
 
 - Role‑separated, disciplined, and built way to complex.
+- Next one will focus on basics, first.
 
 ## Description
 A Local-First AI Assistant based on **Explicit Cognition Framework (ECF)**, a local-first architecture striving to solve agentic drift, context taint, and halucination. By demoting the LLM to a **stateless reasoning component** and enforcing **deterministic control** via a specialized Controller, JARVISv4 ensures reliability. All state is maintained in **externalized memory artifacts** (Working, Episodic, Semantic), and improvement is driven by **explicit weight learning** rather than context accumulation.
