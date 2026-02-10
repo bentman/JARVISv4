@@ -2,7 +2,7 @@
 ## Just A Reimagined Version In Stasis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status: Reference](https://img.shields.io/badge/status-Reference-Orange)](#)
+[![Status: Reference](https://img.shields.io/badge/status-Reference-orange)](#)
 [![Coming Soon: JARVISv5](https://img.shields.io/badge/Successor-JARVISv5-blue)](https://github.com/bentman/JARVISv5)
 
 - Role‑separated, disciplined, and built way to complex.
