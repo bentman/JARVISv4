@@ -1,5 +1,5 @@
 # J.A.R.V.I.S. AI Local Assistant (JARVISv4)
-## Just A Reimagined Version In Stabilization
+## Just A Reimagined Version In Stasis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status: Reference](https://img.shields.io/badge/status-Reference-Orange)](#)
