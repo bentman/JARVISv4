@@ -2,9 +2,9 @@
 ## Just A Reimagined Version In Stabilization
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status: Active](https://img.shields.io/badge/Status-Active-green)](#)
+[![Status: Reference](https://img.shields.io/badge/status-Reference-Orange)](#)
+[![Coming Soon: JARVISv5](https://img.shields.io/badge/Successor-JARVISv5-blue)](https://github.com/bentman/JARVISv5)
 
-- On its way to become the refined, engineered evolution. 
 - Role‑separated, disciplined, and built for long‑term growth.
 
 ## Description
